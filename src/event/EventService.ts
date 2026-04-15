@@ -1,8 +1,11 @@
-import { Err, type Result } from "../lib/result";
+import { Err, Ok, type Result } from "../lib/result";
 import type { UserRole } from "../auth/User";
 import type { IEventRecord } from "./Event";
 import type { IEventRepository } from "./EventRepository";
 import {
+  EventNotFoundError,
+  InvalidEventStateError,
+  UnauthorizedError,
   UnexpectedDependencyError,
   type CancelEventError,
   type PublishEventError,
@@ -29,11 +32,41 @@ class EventService implements IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, PublishEventError>> {
-    void eventId;
-    void actingUserId;
-    void actingUserRole;
-    void this.events;
-    return Err(UnexpectedDependencyError("publishEvent is not implemented yet."));
+    const eventResult = await this.events.findById(eventId);
+    if (eventResult.ok === false) {
+      return Err(UnexpectedDependencyError(eventResult.value.message));
+    }
+
+    const event = eventResult.value;
+    if (!event) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    const canPublishAny = actingUserRole === "admin";
+    const canPublishOwn =
+      actingUserRole === "staff" && event.organizerId === actingUserId;
+    if (!canPublishAny && !canPublishOwn) {
+      return Err(UnauthorizedError("You are not allowed to publish this event."));
+    }
+
+    if (event.status !== "draft") {
+      return Err(InvalidEventStateError("Only draft events can be published."));
+    }
+
+    const updatedResult = await this.events.updateStatus(
+      event.id,
+      "published",
+      new Date().toISOString(),
+    );
+    if (updatedResult.ok === false) {
+      return Err(UnexpectedDependencyError(updatedResult.value.message));
+    }
+
+    if (!updatedResult.value) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    return Ok(updatedResult.value);
   }
 
   async cancelEvent(
