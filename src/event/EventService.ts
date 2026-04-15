@@ -74,11 +74,41 @@ class EventService implements IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, CancelEventError>> {
-    void eventId;
-    void actingUserId;
-    void actingUserRole;
-    void this.events;
-    return Err(UnexpectedDependencyError("cancelEvent is not implemented yet."));
+    const eventResult = await this.events.findById(eventId);
+    if (eventResult.ok === false) {
+      return Err(UnexpectedDependencyError(eventResult.value.message));
+    }
+
+    const event = eventResult.value;
+    if (!event) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    const canCancelAny = actingUserRole === "admin";
+    const canCancelOwn =
+      actingUserRole === "staff" && event.organizerId === actingUserId;
+    if (!canCancelAny && !canCancelOwn) {
+      return Err(UnauthorizedError("You are not allowed to cancel this event."));
+    }
+
+    if (event.status !== "published") {
+      return Err(InvalidEventStateError("Only published events can be cancelled."));
+    }
+
+    const updatedResult = await this.events.updateStatus(
+      event.id,
+      "cancelled",
+      new Date().toISOString(),
+    );
+    if (updatedResult.ok === false) {
+      return Err(UnexpectedDependencyError(updatedResult.value.message));
+    }
+
+    if (!updatedResult.value) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    return Ok(updatedResult.value);
   }
 }
 
