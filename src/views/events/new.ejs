@@ -3,6 +3,13 @@
 <div>
   <h1>Create Event</h1>
 
+  <% if (errorMessage) { %>
+    <div>
+      <strong>Unable to create event</strong>
+      <p><%= errorMessage %></p>
+    </div>
+  <% } %>
+
   <form action="/events" method="post">
     <div>
       <label for="title">Title</label>
