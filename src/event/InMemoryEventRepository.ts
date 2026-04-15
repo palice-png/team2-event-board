@@ -3,6 +3,15 @@ import type { EventStatus, IEventRecord } from "./Event";
 import type { EventRepositoryError, IEventRepository } from "./EventRepository";
 
 export const DEMO_EVENTS: IEventRecord[] = [];
+export type RsvpStatus = "going" | "waitlisted" | "cancelled";
+export interface IRsvpRecord {
+  id: string;
+  eventId: string;
+  userId: string;
+  status: RsvpStatus;
+  createdAt: string;
+}
+export const DEMO_RSVPS: IRsvpRecord[] = [];
 
 function RepositoryError(message: string): EventRepositoryError {
   return {
@@ -12,7 +21,10 @@ function RepositoryError(message: string): EventRepositoryError {
 }
 
 class InMemoryEventRepository implements IEventRepository {
-  constructor(private readonly events: IEventRecord[]) {}
+  constructor(
+    private readonly events: IEventRecord[],
+    private readonly rsvps: IRsvpRecord[],
+  ) {}
 
   async findById(eventId: string): Promise<Result<IEventRecord | null, EventRepositoryError>> {
     try {
@@ -20,6 +32,36 @@ class InMemoryEventRepository implements IEventRepository {
       return Ok(match);
     } catch {
       return Err(RepositoryError("Unable to read events from memory."));
+    }
+  }
+
+  async listByOrganizerId(
+    organizerId: string,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      const events = this.events.filter((event) => event.organizerId === organizerId);
+      return Ok(events);
+    } catch {
+      return Err(RepositoryError("Unable to read organizer events from memory."));
+    }
+  }
+
+  async listAll(): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      return Ok([...this.events]);
+    } catch {
+      return Err(RepositoryError("Unable to list events from memory."));
+    }
+  }
+
+  async countGoingByEventId(eventId: string): Promise<Result<number, EventRepositoryError>> {
+    try {
+      const count = this.rsvps.filter(
+        (rsvp) => rsvp.eventId === eventId && rsvp.status === "going",
+      ).length;
+      return Ok(count);
+    } catch {
+      return Err(RepositoryError("Unable to read attendee counts from memory."));
     }
   }
 
@@ -48,5 +90,5 @@ class InMemoryEventRepository implements IEventRepository {
 }
 
 export function CreateInMemoryEventRepository(): IEventRepository {
-  return new InMemoryEventRepository([...DEMO_EVENTS]);
+  return new InMemoryEventRepository(DEMO_EVENTS, DEMO_RSVPS);
 }
