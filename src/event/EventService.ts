@@ -41,29 +41,93 @@ class EventService implements IEventService {
       );
     }
 
-    const title = eventInput.title.trim();
-    const description = eventInput.description.trim();
-    const location = eventInput.location.trim();
-    const category = eventInput.category.trim();
-
-    if (!title) {
-      return Err(ValidationError("Title is required."));
+    const titleResult = this.normalizeRequiredText(eventInput.title, "Title");
+    if (titleResult.ok === false) {
+      return Err(titleResult.value);
     }
 
-    if (!description) {
-      return Err(ValidationError("Description is required."));
+    const descriptionResult = this.normalizeRequiredText(
+      eventInput.description,
+      "Description",
+    );
+    if (descriptionResult.ok === false) {
+      return Err(descriptionResult.value);
     }
 
-    if (!location) {
-      return Err(ValidationError("Location is required."));
+    const locationResult = this.normalizeRequiredText(
+      eventInput.location,
+      "Location",
+    );
+    if (locationResult.ok === false) {
+      return Err(locationResult.value);
     }
 
-    if (!category) {
-      return Err(ValidationError("Category is required."));
+    const categoryResult = this.normalizeRequiredText(
+      eventInput.category,
+      "Category",
+    );
+    if (categoryResult.ok === false) {
+      return Err(categoryResult.value);
     }
 
-    const start = new Date(eventInput.startDatetime);
-    const end = new Date(eventInput.endDatetime);
+    const datesResult = this.parseAndValidateDates(
+      eventInput.startDatetime,
+      eventInput.endDatetime,
+    );
+    if (datesResult.ok === false) {
+      return Err(datesResult.value);
+    }
+
+    const capacityResult = this.parseAndValidateCapacity(eventInput.capacity);
+    if (capacityResult.ok === false) {
+      return Err(capacityResult.value);
+    }
+
+    const now = new Date().toISOString();
+
+    const created = await this.events.createEvent({
+      title: titleResult.value,
+      description: descriptionResult.value,
+      location: locationResult.value,
+      category: categoryResult.value,
+      status: "draft",
+      capacity: capacityResult.value,
+      startDatetime: datesResult.value.startDatetime,
+      endDatetime: datesResult.value.endDatetime,
+      organizerId: actingUserId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    if (created.ok === false) {
+      return Err(UnexpectedDependencyError(created.value.message));
+    }
+
+    return Ok(toEventSummary(created.value));
+  }
+
+  private normalizeRequiredText(
+    value: string,
+    fieldName: string,
+  ): Result<string, CreateEventError> {
+    const trimmed = value.trim();
+
+    if (!trimmed) {
+      return Err(ValidationError(`${fieldName} is required.`));
+    }
+
+    return Ok(trimmed);
+  }
+
+  private parseAndValidateDates(
+    startDatetime: string,
+    endDatetime: string,
+  ): Result<
+    { startDatetime: string; endDatetime: string },
+    CreateEventError
+  > {
+    const start = new Date(startDatetime);
+    const end = new Date(endDatetime);
 
     if (Number.isNaN(start.getTime())) {
       return Err(ValidationError("Start date and time are required."));
@@ -75,46 +139,34 @@ class EventService implements IEventService {
 
     if (end.getTime() <= start.getTime()) {
       return Err(
-        ValidationError("End date and time must be after the start date and time."),
+        ValidationError(
+          "End date and time must be after the start date and time.",
+        ),
       );
     }
 
-    const rawCapacity = eventInput.capacity.trim();
-    let capacity: number | null = null;
-
-    if (rawCapacity) {
-      const parsedCapacity = Number(rawCapacity);
-
-      if (!Number.isInteger(parsedCapacity) || parsedCapacity <= 0) {
-        return Err(ValidationError("Capacity must be a positive whole number."));
-      }
-
-      capacity = parsedCapacity;
-    }
-
-    const now = new Date().toISOString();
-
-    const created = await this.events.createEvent({
-      title,
-      description,
-      location,
-      category,
-      status: "draft",
-      capacity,
+    return Ok({
       startDatetime: start.toISOString(),
       endDatetime: end.toISOString(),
-      organizerId: actingUserId,
-      createdAt: now,
-      updatedAt: now,
     });
+  }
 
-    if (created.ok === false) {
-      return Err(
-        UnexpectedDependencyError(created.value.message),
-      );
+  private parseAndValidateCapacity(
+    capacityInput: string,
+  ): Result<number | null, CreateEventError> {
+    const rawCapacity = capacityInput.trim();
+
+    if (!rawCapacity) {
+      return Ok(null);
     }
 
-    return Ok(toEventSummary(created.value));
+    const parsedCapacity = Number(rawCapacity);
+
+    if (!Number.isInteger(parsedCapacity) || parsedCapacity <= 0) {
+      return Err(ValidationError("Capacity must be a positive whole number."));
+    }
+
+    return Ok(parsedCapacity);
   }
 }
 
