@@ -48,5 +48,5 @@ class InMemoryEventRepository implements IEventRepository {
 }
 
 export function CreateInMemoryEventRepository(): IEventRepository {
-  return new InMemoryEventRepository(DEMO_EVENTS, DEMO_RSVPS);
+  return new InMemoryEventRepository(DEMO_EVENTS);
 }
