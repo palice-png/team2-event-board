@@ -2,6 +2,7 @@
 
 <div>
   <h1>Create Event</h1>
+  <p>Newly created events start as drafts.</p>
 
   <% if (errorMessage) { %>
     <div>
@@ -64,6 +65,7 @@
         step="1"
         value="<%= values.capacity ?? '' %>"
       />
+      <p>Leave blank if the event has no attendance limit.</p>
     </div>
 
     <div>
