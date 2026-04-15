@@ -8,6 +8,11 @@ export interface EventRepositoryError {
 
 export interface IEventRepository {
   findById(eventId: string): Promise<Result<IEventRecord | null, EventRepositoryError>>;
+  listByOrganizerId(
+    organizerId: string,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
+  listAll(): Promise<Result<IEventRecord[], EventRepositoryError>>;
+  countGoingByEventId(eventId: string): Promise<Result<number, EventRepositoryError>>;
   updateStatus(
     eventId: string,
     status: EventStatus,
