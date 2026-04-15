@@ -12,6 +12,10 @@ import {
 } from "./errors";
 
 export interface IEventService {
+  getOrganizerDashboard(
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<OrganizerDashboardView, DashboardError>>;
   publishEvent(
     eventId: string,
     actingUserId: string,
@@ -24,8 +28,68 @@ export interface IEventService {
   ): Promise<Result<IEventRecord, CancelEventError>>;
 }
 
+export interface OrganizerDashboardEventItem {
+  event: IEventRecord;
+  attendeeCount: number;
+}
+
+export interface OrganizerDashboardView {
+  published: OrganizerDashboardEventItem[];
+  draft: OrganizerDashboardEventItem[];
+  cancelledOrPast: OrganizerDashboardEventItem[];
+}
+
+export type DashboardError = PublishEventError;
+
 class EventService implements IEventService {
   constructor(private readonly events: IEventRepository) {}
+
+  async getOrganizerDashboard(
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<OrganizerDashboardView, DashboardError>> {
+    if (actingUserRole === "user") {
+      return Err(UnauthorizedError("You are not allowed to access organizer dashboard."));
+    }
+
+    const eventsResult =
+      actingUserRole === "admin"
+        ? await this.events.listAll()
+        : await this.events.listByOrganizerId(actingUserId);
+    if (eventsResult.ok === false) {
+      return Err(UnexpectedDependencyError(eventsResult.value.message));
+    }
+
+    const published: OrganizerDashboardEventItem[] = [];
+    const draft: OrganizerDashboardEventItem[] = [];
+    const cancelledOrPast: OrganizerDashboardEventItem[] = [];
+
+    for (const event of eventsResult.value) {
+      const attendeeCountResult = await this.events.countGoingByEventId(event.id);
+      if (attendeeCountResult.ok === false) {
+        return Err(UnexpectedDependencyError(attendeeCountResult.value.message));
+      }
+
+      const item: OrganizerDashboardEventItem = {
+        event,
+        attendeeCount: attendeeCountResult.value,
+      };
+
+      if (event.status === "published") {
+        published.push(item);
+      } else if (event.status === "draft") {
+        draft.push(item);
+      } else {
+        cancelledOrPast.push(item);
+      }
+    }
+
+    return Ok({
+      published,
+      draft,
+      cancelledOrPast,
+    });
+  }
 
   async publishEvent(
     eventId: string,
