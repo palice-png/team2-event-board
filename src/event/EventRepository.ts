@@ -1,5 +1,5 @@
 import type { Result } from "../lib/result";
-import type { IEventRecord } from "./Event";
+import type { EventStatus, IEventRecord } from "./Event";
 
 export type EventRepositoryError = {
   name: "UnexpectedDependencyError";
@@ -11,7 +11,7 @@ export interface ICreateEventRecordInput {
   description: string;
   location: string;
   category: string;
-  status: "draft" | "published" | "cancelled" | "past";
+  status: EventStatus;
   capacity: number | null;
   startDatetime: string;
   endDatetime: string;
