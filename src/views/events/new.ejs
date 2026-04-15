@@ -1,0 +1,52 @@
+<div>
+  <h1>Create Event</h1>
+
+  <form action="/events" method="post">
+    <div>
+      <label for="title">Title</label>
+      <input id="title" name="title" type="text" required />
+    </div>
+
+    <div>
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="5" required></textarea>
+    </div>
+
+    <div>
+      <label for="location">Location</label>
+      <input id="location" name="location" type="text" required />
+    </div>
+
+    <div>
+      <label for="category">Category</label>
+      <input id="category" name="category" type="text" required />
+    </div>
+
+    <div>
+      <label for="capacity">Capacity</label>
+      <input id="capacity" name="capacity" type="number" min="1" step="1" />
+    </div>
+
+    <div>
+      <label for="startDatetime">Start date and time</label>
+      <input
+        id="startDatetime"
+        name="startDatetime"
+        type="datetime-local"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="endDatetime">End date and time</label>
+      <input
+        id="endDatetime"
+        name="endDatetime"
+        type="datetime-local"
+        required
+      />
+    </div>
+
+    <button type="submit">Create Event</button>
+  </form>
+</div>
