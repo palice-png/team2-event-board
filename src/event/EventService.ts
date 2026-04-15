@@ -35,10 +35,15 @@ class EventService implements IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventSummary, CreateEventError>> {
-    if (actingUserRole !== "admin" && actingUserRole !== "staff") {
+    if (!this.canCreateEvents(actingUserRole)) {
       return Err(
         UnauthorizedError("Only organizers and admins can create events."),
       );
+    }
+
+    const organizerIdResult = this.normalizeActingUserId(actingUserId);
+    if (organizerIdResult.ok === false) {
+      return Err(organizerIdResult.value);
     }
 
     const titleResult = this.normalizeRequiredText(eventInput.title, "Title");
@@ -94,7 +99,7 @@ class EventService implements IEventService {
       capacity: capacityResult.value,
       startDatetime: datesResult.value.startDatetime,
       endDatetime: datesResult.value.endDatetime,
-      organizerId: actingUserId,
+      organizerId: organizerIdResult.value,
       createdAt: now,
       updatedAt: now,
     });
@@ -104,6 +109,22 @@ class EventService implements IEventService {
     }
 
     return Ok(toEventSummary(created.value));
+  }
+
+  private canCreateEvents(role: UserRole): boolean {
+    return role === "admin" || role === "staff";
+  }
+
+  private normalizeActingUserId(
+    actingUserId: string,
+  ): Result<string, CreateEventError> {
+    const trimmed = actingUserId.trim();
+
+    if (!trimmed) {
+      return Err(UnauthorizedError("Missing authenticated user."));
+    }
+
+    return Ok(trimmed);
   }
 
   private normalizeRequiredText(
