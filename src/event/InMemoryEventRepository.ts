@@ -1,9 +1,14 @@
+import { randomUUID } from "node:crypto";
 import { Err, Ok, type Result } from "../lib/result";
 import type { EventStatus, IEventRecord } from "./Event";
-import type { EventRepositoryError, IEventRepository } from "./EventRepository";
+import type {
+  EventRepositoryError,
+  ICreateEventRecordInput,
+  IEventRepository,
+} from "./EventRepository";
 
-export const DEMO_EVENTS: IEventRecord[] = [];
 export type RsvpStatus = "going" | "waitlisted" | "cancelled";
+
 export interface IRsvpRecord {
   id: string;
   eventId: string;
@@ -11,27 +16,59 @@ export interface IRsvpRecord {
   status: RsvpStatus;
   createdAt: string;
 }
-export const DEMO_RSVPS: IRsvpRecord[] = [];
 
-function RepositoryError(message: string): EventRepositoryError {
+const eventStore = new Map<string, IEventRecord>();
+const rsvpStore: IRsvpRecord[] = [];
+
+function UnexpectedDependencyError(message: string): EventRepositoryError {
   return {
-    name: "EventRepositoryError",
+    name: "UnexpectedDependencyError",
     message,
   };
 }
 
 class InMemoryEventRepository implements IEventRepository {
-  constructor(
-    private readonly events: IEventRecord[],
-    private readonly rsvps: IRsvpRecord[],
-  ) {}
-
-  async findById(eventId: string): Promise<Result<IEventRecord | null, EventRepositoryError>> {
+  async createEvent(
+    input: ICreateEventRecordInput,
+  ): Promise<Result<IEventRecord, EventRepositoryError>> {
     try {
-      const match = this.events.find((event) => event.id === eventId) ?? null;
-      return Ok(match);
+      const event: IEventRecord = {
+        id: randomUUID(),
+        title: input.title,
+        description: input.description,
+        location: input.location,
+        category: input.category,
+        status: input.status,
+        capacity: input.capacity,
+        startDatetime: input.startDatetime,
+        endDatetime: input.endDatetime,
+        organizerId: input.organizerId,
+        createdAt: input.createdAt,
+        updatedAt: input.updatedAt,
+      };
+
+      eventStore.set(event.id, event);
+      return Ok(event);
     } catch {
-      return Err(RepositoryError("Unable to read events from memory."));
+      return Err(UnexpectedDependencyError("Unable to create event."));
+    }
+  }
+
+  async findById(
+    eventId: string,
+  ): Promise<Result<IEventRecord | null, EventRepositoryError>> {
+    try {
+      return Ok(eventStore.get(eventId) ?? null);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to read event."));
+    }
+  }
+
+  async listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      return Ok([...eventStore.values()]);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to list events."));
     }
   }
 
@@ -39,29 +76,33 @@ class InMemoryEventRepository implements IEventRepository {
     organizerId: string,
   ): Promise<Result<IEventRecord[], EventRepositoryError>> {
     try {
-      const events = this.events.filter((event) => event.organizerId === organizerId);
+      const events = [...eventStore.values()].filter(
+        (event) => event.organizerId === organizerId,
+      );
       return Ok(events);
     } catch {
-      return Err(RepositoryError("Unable to read organizer events from memory."));
+      return Err(UnexpectedDependencyError("Unable to read organizer events."));
     }
   }
 
   async listAll(): Promise<Result<IEventRecord[], EventRepositoryError>> {
     try {
-      return Ok([...this.events]);
+      return Ok([...eventStore.values()]);
     } catch {
-      return Err(RepositoryError("Unable to list events from memory."));
+      return Err(UnexpectedDependencyError("Unable to list all events."));
     }
   }
 
-  async countGoingByEventId(eventId: string): Promise<Result<number, EventRepositoryError>> {
+  async countGoingByEventId(
+    eventId: string,
+  ): Promise<Result<number, EventRepositoryError>> {
     try {
-      const count = this.rsvps.filter(
+      const count = rsvpStore.filter(
         (rsvp) => rsvp.eventId === eventId && rsvp.status === "going",
       ).length;
       return Ok(count);
     } catch {
-      return Err(RepositoryError("Unable to read attendee counts from memory."));
+      return Err(UnexpectedDependencyError("Unable to read attendee counts."));
     }
   }
 
@@ -71,24 +112,25 @@ class InMemoryEventRepository implements IEventRepository {
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>> {
     try {
-      const index = this.events.findIndex((event) => event.id === eventId);
-      if (index === -1) {
+      const event = eventStore.get(eventId);
+      if (!event) {
         return Ok(null);
       }
 
       const updatedEvent: IEventRecord = {
-        ...this.events[index],
+        ...event,
         status,
         updatedAt,
       };
-      this.events[index] = updatedEvent;
+
+      eventStore.set(eventId, updatedEvent);
       return Ok(updatedEvent);
     } catch {
-      return Err(RepositoryError("Unable to update event status in memory."));
+      return Err(UnexpectedDependencyError("Unable to update event status."));
     }
   }
 }
 
 export function CreateInMemoryEventRepository(): IEventRepository {
-  return new InMemoryEventRepository(DEMO_EVENTS, DEMO_RSVPS);
+  return new InMemoryEventRepository();
 }
