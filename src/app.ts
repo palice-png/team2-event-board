@@ -18,6 +18,9 @@ import {
   touchAppSession,
 } from "./session/AppSession";
 import { ILoggingService } from "./service/LoggingService";
+import { CreateInMemoryEventRepository } from "./event/InMemoryEventRepository";
+import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
+import { CreateRsvpService } from "./rsvp/RsvpService";
 
 type AsyncRequestHandler = RequestHandler;
 
