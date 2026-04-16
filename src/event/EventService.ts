@@ -174,11 +174,7 @@ class EventService implements IEventService {
       return Err(EventNotFoundError("Event not found."));
     }
 
-    if (
-      event.status === "draft" &&
-      actingUserRole !== "admin" &&
-      event.organizerId !== actingUserId
-    ) {
+    if (!this.canViewEventDetail(event, actingUserId, actingUserRole)) {
       return Err(EventNotFoundError("Event not found."));
     }
 
@@ -345,6 +341,20 @@ class EventService implements IEventService {
 
   private canCreateEvents(role: UserRole): boolean {
     return role === "admin" || role === "staff";
+  }
+
+  private canViewEventDetail(
+    event: IEventRecord,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): boolean {
+    if (event.status === "draft") {
+      return (
+        actingUserRole === "admin" || event.organizerId === actingUserId
+      );
+    }
+
+    return true;
   }
 
   private normalizeActingUserId(
