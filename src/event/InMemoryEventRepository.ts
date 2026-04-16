@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Err, Ok, type Result } from "../lib/result";
-import type { IEventRecord } from "./Event";
+import type { EventStatus, IEventRecord } from "./Event";
 import type {
   EventRepositoryError,
   ICreateEventRecordInput,
@@ -58,6 +58,30 @@ class InMemoryEventRepository implements IEventRepository {
       return Ok([...eventStore.values()]);
     } catch {
       return Err(UnexpectedDependencyError("Unable to list events."));
+    }
+  }
+
+  async updateStatus(
+    eventId: string,
+    status: EventStatus,
+    updatedAt: string,
+  ): Promise<Result<IEventRecord | null, EventRepositoryError>> {
+    try {
+      const event = eventStore.get(eventId);
+      if (!event) {
+        return Ok(null);
+      }
+
+      const updatedEvent: IEventRecord = {
+        ...event,
+        status,
+        updatedAt,
+      };
+
+      eventStore.set(eventId, updatedEvent);
+      return Ok(updatedEvent);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to update event status."));
     }
   }
 }

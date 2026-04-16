@@ -30,4 +30,10 @@ export interface IEventRepository {
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
 
   listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>>;
+
+  updateStatus(
+    eventId: string,
+    status: EventStatus,
+    updatedAt: string,
+  ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
 }
