@@ -5,6 +5,9 @@ import { CreateInMemoryUserRepository } from "./auth/InMemoryUserRepository";
 import { CreatePasswordHasher } from "./auth/PasswordHasher";
 import { CreateApp } from "./app";
 import type { IApp } from "./contracts";
+import { CreateEventController } from "./event/EventController";
+import { CreateInMemoryEventRepository } from "./event/InMemoryEventRepository";
+import { CreateEventService } from "./event/EventService";
 import { CreateLoggingService } from "./service/LoggingService";
 import type { ILoggingService } from "./service/LoggingService";
 import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
@@ -14,12 +17,18 @@ import { CreateRsvpController } from "./rsvp/RsvpController";
 export function createComposedApp(logger?: ILoggingService): IApp {
   const resolvedLogger = logger ?? CreateLoggingService();
 
-  // Authentication & authorization wiring
   const authUsers = CreateInMemoryUserRepository();
   const passwordHasher = CreatePasswordHasher();
   const authService = CreateAuthService(authUsers, passwordHasher);
-  const adminUserService = CreateAdminUserService(authUsers, passwordHasher);
-  const authController = CreateAuthController(authService, adminUserService, resolvedLogger);
+  const adminUserService = CreateAdminUserService(
+    authUsers,
+    passwordHasher,
+  );
+  const authController = CreateAuthController(
+    authService,
+    adminUserService,
+    resolvedLogger,
+  );
 
   // RSVP wiring
   const rsvpRepo = CreateInMemoryRsvpRepository();
@@ -27,4 +36,13 @@ export function createComposedApp(logger?: ILoggingService): IApp {
   const rsvpController = CreateRsvpController(rsvpService, resolvedLogger);
 
   return CreateApp(authController, rsvpController, resolvedLogger);
+}
+  const eventRepository = CreateInMemoryEventRepository();
+  const eventService = CreateEventService(eventRepository);
+  const eventController = CreateEventController(
+    eventService,
+    resolvedLogger,
+  );
+
+  return CreateApp(authController, eventController, resolvedLogger);
 }

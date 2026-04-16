@@ -1,0 +1,102 @@
+<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+  <h1 class="text-3xl font-bold text-slate-900 mb-3">Organizer dashboard</h1>
+  <p class="text-slate-500 mb-0">
+    Your events grouped by status. Attendee counts include only RSVPs marked as going.
+  </p>
+</section>
+
+<% if (pageError) { %>
+  <%- include("../partials/error", { message: pageError }) %>
+<% } %>
+
+<% const sections = [
+  { key: "published", label: "Published" },
+  { key: "draft", label: "Draft" },
+  { key: "cancelledOrPast", label: "Cancelled or past" },
+]; %>
+
+<% sections.forEach(function (section) { %>
+  <section class="max-w-3xl mb-5 p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+    <h2 class="text-xl font-semibold mb-4 text-slate-900"><%= section.label %></h2>
+    <% const items = dashboard[section.key]; %>
+    <% if (!items || items.length === 0) { %>
+      <p class="text-slate-500 mb-0">No events in this section.</p>
+    <% } else { %>
+      <ul class="list-none p-0 m-0 space-y-4">
+        <% items.forEach(function (row) { %>
+          <% const ev = row.event; %>
+          <li class="p-4 border border-slate-200 rounded-xl bg-slate-50/50">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="mb-2">
+                  <h3 class="text-lg font-semibold mb-1">
+                    <a
+                      href="/events/<%= ev.id %>"
+                      class="text-blue-700 font-semibold no-underline hover:underline transition"
+                    >
+                      <%= ev.title %>
+                    </a>
+                  </h3>
+                  <p class="text-sm text-slate-500">
+                    Open the full event detail page
+                  </p>
+                </div>
+
+                <p class="text-sm text-slate-600 mb-1">
+                  <strong class="text-slate-700">Date:</strong> <%= ev.startDatetime %>
+                </p>
+                <p class="text-sm text-slate-600 mb-1">
+                  <strong class="text-slate-700">Category:</strong> <%= ev.category %>
+                </p>
+                <p class="text-sm text-slate-600 mb-0">
+                  <strong class="text-slate-700">Attending:</strong>
+                  <% if (typeof ev.capacity === "number") { %>
+                    <%= row.attendeeCount %> / <%= ev.capacity %>
+                  <% } else { %>
+                    <%= row.attendeeCount %> (no capacity limit)
+                  <% } %>
+                </p>
+              </div>
+                  <strong class="text-slate-700">Date:</strong> <%= ev.startDatetime %>
+                </p>
+                <p class="text-sm text-slate-600 mb-1">
+                  <strong class="text-slate-700">Category:</strong> <%= ev.category %>
+                </p>
+                <p class="text-sm text-slate-600 mb-0">
+                  <strong class="text-slate-700">Attending:</strong>
+                  <% if (typeof ev.capacity === "number") { %>
+                    <%= row.attendeeCount %> / <%= ev.capacity %>
+                  <% } else { %>
+                    <%= row.attendeeCount %> (no capacity limit)
+                  <% } %>
+                </p>
+              </div>
+              <div class="flex flex-col gap-2 shrink-0">
+                <% if (ev.status === "draft") { %>
+                  <form method="post" action="/events/<%= ev.id %>/publish" class="m-0">
+                    <button
+                      type="submit"
+                      class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700"
+                    >
+                      Publish
+                    </button>
+                  </form>
+                <% } %>
+                <% if (ev.status === "published") { %>
+                  <form method="post" action="/events/<%= ev.id %>/cancel" class="m-0">
+                    <button
+                      type="submit"
+                      class="px-3 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium cursor-pointer hover:bg-slate-800"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </section>
+<% }); %>
