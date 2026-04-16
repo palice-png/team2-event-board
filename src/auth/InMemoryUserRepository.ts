@@ -2,6 +2,7 @@ import { Err, Ok, type Result } from "../lib/result";
 import { UnexpectedDependencyError, type AuthError } from "./errors";
 import type { IUserRepository } from "./UserRepository";
 import type { IUserRecord } from "./User";
+import { IEventRecord } from "../event/Event";
 
 export const DEMO_USERS: IUserRecord[] = [
   {
@@ -82,6 +83,37 @@ class InMemoryUserRepository implements IUserRepository {
     }
   }
 }
+
+export const DEMO_EVENTS: IEventRecord[] = [
+  {
+    id: "event-1",
+    title: "Draft Test Event",
+    description: "Test draft event for organizer dashboard",
+    location: "UMass",
+    category: "Workshop",
+    status: "draft",
+    capacity: 20,
+    startDatetime: "2026-04-20T18:00:00.000Z",
+    endDatetime: "2026-04-20T20:00:00.000Z",
+    organizerId: "user-staff",
+    createdAt: "2026-04-15T12:00:00.000Z",
+    updatedAt: "2026-04-15T12:00:00.000Z",
+  },
+  {
+    id: "event-2",
+    title: "Published Test Event",
+    description: "Test published event for organizer dashboard",
+    location: "UMass",
+    category: "Seminar",
+    status: "published",
+    capacity: 10,
+    startDatetime: "2026-04-21T18:00:00.000Z",
+    endDatetime: "2026-04-21T19:00:00.000Z",
+    organizerId: "user-staff",
+    createdAt: "2026-04-15T12:00:00.000Z",
+    updatedAt: "2026-04-15T12:00:00.000Z",
+  },
+];
 
 export function CreateInMemoryUserRepository(): IUserRepository {
   // We keep users in memory in this lecture so students can focus on auth, authorization,
