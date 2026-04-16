@@ -7,10 +7,29 @@ export interface IEventRecord {
   location: string;
   category: string;
   status: EventStatus;
-  capacity?: number;
+  capacity: number | null;
   startDatetime: string;
   endDatetime: string;
   organizerId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface IEventSummary {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  category: string;
+  status: EventStatus;
+  capacity: number | null;
+  startDatetime: string;
+  endDatetime: string;
+  organizerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function toEventSummary(event: IEventRecord): IEventSummary {
+  return { ...event };
 }
