@@ -63,6 +63,18 @@ class EventController implements IEventController {
     };
   }
 
+  private buildCreateViewModel(
+    session: IAppBrowserSession,
+    errorMessage: string | null,
+    formData: ICreateEventInput,
+  ) {
+    return {
+      errorMessage,
+      session,
+      formData,
+    };
+  }
+
   private mapErrorStatus(
     error:
       | CreateEventError
@@ -91,11 +103,10 @@ class EventController implements IEventController {
       return;
     }
 
-    res.render("events/new", {
-      errorMessage: null,
-      session,
-      formData: this.emptyCreateForm(),
-    });
+    res.render(
+      "events/new",
+      this.buildCreateViewModel(session, null, this.emptyCreateForm()),
+    );
   }
 
   async createFromForm(
@@ -124,11 +135,10 @@ class EventController implements IEventController {
       const log = status >= 500 ? this.logger.error : this.logger.warn;
       log.call(this.logger, `Create event failed: ${result.value.message}`);
 
-      res.status(status).render("events/new", {
-        errorMessage: result.value.message,
-        session,
-        formData: eventInput,
-      });
+      res.status(status).render(
+        "events/new",
+        this.buildCreateViewModel(session, result.value.message, eventInput),
+      );
       return;
     }
 
