@@ -1,28 +1,75 @@
-export type EventError =
-  | { name: "EventNotFoundError"; message: string }
-  | { name: "UnauthorizedError"; message: string }
-  | { name: "InvalidEventStateError"; message: string }
-  | { name: "UnexpectedDependencyError"; message: string };
+export type ValidationError = {
+  name: "ValidationError";
+  message: string;
+};
 
-export type PublishEventError = EventError;
-export type CancelEventError = EventError;
+export type UnauthorizedError = {
+  name: "UnauthorizedError";
+  message: string;
+};
 
-export const EventNotFoundError = (message: string): EventError => ({
-  name: "EventNotFoundError",
+export type UnexpectedDependencyError = {
+  name: "UnexpectedDependencyError";
+  message: string;
+};
+
+export type EventNotFoundError = {
+  name: "EventNotFoundError";
+  message: string;
+};
+
+export type InvalidEventStateError = {
+  name: "InvalidEventStateError";
+  message: string;
+};
+
+export type CreateEventError =
+  | ValidationError
+  | UnauthorizedError
+  | UnexpectedDependencyError;
+
+export type GetEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | UnexpectedDependencyError;
+
+export type PublishEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | InvalidEventStateError
+  | UnexpectedDependencyError;
+
+export type CancelEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | InvalidEventStateError
+  | UnexpectedDependencyError;
+
+export const ValidationError = (message: string): ValidationError => ({
+  name: "ValidationError",
   message,
 });
 
-export const UnauthorizedError = (message: string): EventError => ({
+export const UnauthorizedError = (message: string): UnauthorizedError => ({
   name: "UnauthorizedError",
   message,
 });
 
-export const InvalidEventStateError = (message: string): EventError => ({
-  name: "InvalidEventStateError",
+export const UnexpectedDependencyError = (
+  message: string,
+): UnexpectedDependencyError => ({
+  name: "UnexpectedDependencyError",
   message,
 });
 
-export const UnexpectedDependencyError = (message: string): EventError => ({
-  name: "UnexpectedDependencyError",
+export const EventNotFoundError = (message: string): EventNotFoundError => ({
+  name: "EventNotFoundError",
+  message,
+});
+
+export const InvalidEventStateError = (
+  message: string,
+): InvalidEventStateError => ({
+  name: "InvalidEventStateError",
   message,
 });

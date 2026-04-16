@@ -14,8 +14,16 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
-  publishFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void>;
-  cancelFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void>;
+  publishFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void>;
+  cancelFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void>;
 }
 
 class EventController implements IEventController {
@@ -51,10 +59,15 @@ class EventController implements IEventController {
       currentUser.userId,
       currentUser.role,
     );
+
     if (result.ok === false) {
       const status = this.mapErrorStatus(result.value);
       const log = status >= 500 ? this.logger.error : this.logger.warn;
-      log.call(this.logger, `Load organizer dashboard failed: ${result.value.message}`);
+      log.call(
+        this.logger,
+        `Load organizer dashboard failed: ${result.value.message}`,
+      );
+
       if (status === 403) {
         res.status(status).render("partials/error", {
           message: result.value.message,
@@ -78,7 +91,11 @@ class EventController implements IEventController {
     });
   }
 
-  async publishFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void> {
+  async publishFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -88,7 +105,12 @@ class EventController implements IEventController {
       return;
     }
 
-    const result = await this.service.publishEvent(eventId, currentUser.userId, currentUser.role);
+    const result = await this.service.publishEvent(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
     if (result.ok === false) {
       const status = this.mapErrorStatus(result.value);
       const log = status >= 500 ? this.logger.error : this.logger.warn;
@@ -104,7 +126,11 @@ class EventController implements IEventController {
     res.status(200).send("Event published.");
   }
 
-  async cancelFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void> {
+  async cancelFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -114,7 +140,12 @@ class EventController implements IEventController {
       return;
     }
 
-    const result = await this.service.cancelEvent(eventId, currentUser.userId, currentUser.role);
+    const result = await this.service.cancelEvent(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
     if (result.ok === false) {
       const status = this.mapErrorStatus(result.value);
       const log = status >= 500 ? this.logger.error : this.logger.warn;
