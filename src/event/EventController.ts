@@ -5,10 +5,29 @@ import {
   type IAppBrowserSession,
 } from "../session/AppSession";
 import type { ILoggingService } from "../service/LoggingService";
-import type { DashboardError, IEventService } from "./EventService";
-import type { CancelEventError, PublishEventError } from "./errors";
+import type {
+  DashboardError,
+  ICreateEventInput,
+  IEventService,
+} from "./EventService";
+import type {
+  CancelEventError,
+  CreateEventError,
+  PublishEventError,
+} from "./errors";
 
 export interface IEventController {
+  showCreateForm(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
+  createFromForm(
+    res: Response,
+    eventInput: ICreateEventInput,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
   showOrganizerDashboard(
     res: Response,
     store: AppSessionStore,
@@ -32,13 +51,99 @@ class EventController implements IEventController {
     private readonly logger: ILoggingService,
   ) {}
 
+  private emptyCreateForm(): ICreateEventInput {
+    return {
+      title: "",
+      description: "",
+      location: "",
+      category: "",
+      capacity: "",
+      startDatetime: "",
+      endDatetime: "",
+    };
+  }
+
+  private buildCreateViewModel(
+    session: IAppBrowserSession,
+    errorMessage: string | null,
+    formData: ICreateEventInput,
+  ) {
+    return {
+      errorMessage,
+      session,
+      formData,
+    };
+  }
+
   private mapErrorStatus(
-    error: PublishEventError | CancelEventError | DashboardError,
+    error:
+      | CreateEventError
+      | PublishEventError
+      | CancelEventError
+      | DashboardError,
   ): number {
+    if (error.name === "ValidationError") return 400;
     if (error.name === "EventNotFoundError") return 404;
     if (error.name === "UnauthorizedError") return 403;
     if (error.name === "InvalidEventStateError") return 409;
     return 500;
+  }
+
+  async showCreateForm(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    res.render(
+      "events/new",
+      this.buildCreateViewModel(session, null, this.emptyCreateForm()),
+    );
+  }
+
+  async createFromForm(
+    res: Response,
+    eventInput: ICreateEventInput,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    const result = await this.service.createEvent(
+      eventInput,
+      currentUser.userId,
+      currentUser.role,
+    );
+
+    if (result.ok === false) {
+      const status = this.mapErrorStatus(result.value);
+      const log = status >= 500 ? this.logger.error : this.logger.warn;
+      log.call(this.logger, `Create event failed: ${result.value.message}`);
+
+      res.status(status).render(
+        "events/new",
+        this.buildCreateViewModel(session, result.value.message, eventInput),
+      );
+      return;
+    }
+
+    this.logger.info(`Created draft event ${result.value.id}`);
+    res.redirect("/organizer/dashboard");
   }
 
   async showOrganizerDashboard(
