@@ -71,5 +71,64 @@ export class EventService {
     
         return Ok(eventInput);
     }
-    
+        updateEvent(
+            eventId: string,
+            eventInput: EventInput,
+            actingUserId: string,
+            actingUserRole: UserRole
+          ): Result<EventSummary, UpdateEventError> {
+            const event = this.repo.getById(eventId);
+        
+            if (!event) {
+              return Err({
+                name: "EventNotFoundError",
+                message: "Event not found",
+              });
+            }
+        
+            const isOwner = event.organizerId === actingUserId;
+            const isAdmin = actingUserRole === "admin";
+        
+            if (!isOwner && !isAdmin) {
+              return Err({
+                name: "UnauthorizedError",
+                message: "Not authorized to edit this event",
+              });
+            }
+        
+            if (event.status === "cancelled") {
+              return Err({
+                name: "InvalidEventStateError",
+                message: "Cannot edit cancelled event",
+              });
+            }
+        
+            const validated = this.validateEventInput(eventInput);
+        
+            if (!validated.ok) {
+              return validated;
+            }
+        
+            const updated: EventSummary = {
+                id: event.id,
+                title: validated.value.title,
+                description: validated.value.description,
+                location: validated.value.location,
+                category: validated.value.category,
+                status: event.status,
+                capacity: event.capacity,
+                startDatetime: validated.value.startDatetime,
+                endDatetime: validated.value.endDatetime,
+                organizerId: event.organizerId,
+                createdAt: event.createdAt,
+                updatedAt: new Date().toISOString(),
+            };
+        
+            this.repo.update(updated);
+        
+            return Ok(updated);
+        }
 }
+    
+    
+
