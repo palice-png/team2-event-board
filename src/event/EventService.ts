@@ -170,7 +170,15 @@ class EventService implements IEventService {
     }
 
     const event = eventResult.value;
-    if (!event) {
+        if (!event) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    if (
+      event.status === "draft" &&
+      actingUserRole !== "admin" &&
+      event.organizerId !== actingUserId
+    ) {
       return Err(EventNotFoundError("Event not found."));
     }
 
