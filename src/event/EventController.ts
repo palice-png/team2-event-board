@@ -109,6 +109,17 @@ class EventController implements IEventController {
     };
   }
 
+  private renderError(
+    res: Response,
+    status: number,
+    message: string,
+  ): void {
+    res.status(status).render("partials/error", {
+      message,
+      layout: false,
+    });
+  }
+
   async showCreateForm(
     res: Response,
     store: AppSessionStore,
@@ -193,19 +204,13 @@ class EventController implements IEventController {
       log.call(this.logger, `Load event detail failed: ${result.value.message}`);
 
       if (status === 404) {
-        res.status(404).render("partials/error", {
-          message: "Event not found.",
-          layout: false,
-        });
+        this.renderError(res, 404, "Event not found.");
         return;
       }
 
-      res.status(status).render("partials/error", {
-        message: result.value.message,
-        layout: false,
-      });
-      return;
-    }
+        this.renderError(res, status, result.value.message);
+        return;
+      }
 
     res.render(
       "events/detail",
