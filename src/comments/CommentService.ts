@@ -46,4 +46,33 @@ export class CommentService {
     
         return Ok(comment);
       }
+      deleteComment(
+        commentId: string,
+        actingUserId: string,
+        actingUserRole: string
+      ): Result<void, CommentError> {
+        const comment = this.repo.getById(commentId);
+    
+        if (!comment) {
+            return Err<CommentError>({
+                name: "CommentNotFoundError",
+                message: "Comment not found",
+              });
+        }
+    
+        const isOwner = comment.userId === actingUserId;
+        const isAdmin = actingUserRole === "admin";
+    
+        if (!isOwner && !isAdmin) {
+            return Err<CommentError>({
+                name: "UnauthorizedError",
+                message: "Not allowed to delete this comment",
+              });
+        }
+    
+        this.repo.delete(commentId);
+    
+        return Ok(undefined);
+      }
+    }
 }
