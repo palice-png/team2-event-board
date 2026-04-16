@@ -17,6 +17,23 @@ export class CommentService {
         actingUserId: string,
         actingUserRole: string
       ): Result<CommentSummary, CommentError> {
+    
+    
+        if (!content?.trim()) {
+            return Err<CommentError>({
+                name: "ValidationError",
+                message: "Comment cannot be empty",
+              });
+        }
+    
+      
+        if (!actingUserId) {
+            return Err<CommentError>({
+                name: "UnauthorizedError",
+                message: "User must be logged in",
+              });
+        }
+    
         const comment: Comment = {
           id: crypto.randomUUID(),
           eventId,
@@ -24,9 +41,9 @@ export class CommentService {
           content,
           createdAt: new Date().toISOString(),
         };
-      
+    
         this.repo.create(comment);
-      
+    
         return Ok(comment);
       }
 }
