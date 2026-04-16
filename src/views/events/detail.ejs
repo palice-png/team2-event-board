@@ -1,0 +1,15 @@
+<div>
+  <h1>Event Details</h1>
+
+  <% if (pageError) { %>
+    <div>
+      <strong>Unable to load event</strong>
+      <p><%= pageError %></p>
+    </div>
+  <% } %>
+
+  <section>
+    <h2><%= event.title %></h2>
+    <p><%= event.description %></p>
+  </section>
+</div>
