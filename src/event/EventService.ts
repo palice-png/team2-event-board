@@ -10,6 +10,7 @@ import {
   ValidationError,
   type CancelEventError,
   type CreateEventError,
+  type GetEventError,
   type PublishEventError,
 } from "./errors";
 
@@ -34,6 +35,11 @@ export interface OrganizerDashboardView {
   cancelledOrPast: OrganizerDashboardEventItem[];
 }
 
+export interface EventDetailView {
+  event: IEventRecord;
+  attendeeCount: number;
+}
+
 export type DashboardError =
   | ReturnType<typeof UnauthorizedError>
   | ReturnType<typeof UnexpectedDependencyError>;
@@ -44,6 +50,12 @@ export interface IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventSummary, CreateEventError>>;
+
+  getEventById(
+    eventId: string,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<EventDetailView, GetEventError>>;
 
   getOrganizerDashboard(
     actingUserId: string,
@@ -145,6 +157,40 @@ class EventService implements IEventService {
     }
 
     return Ok(toEventSummary(created.value));
+  }
+
+  async getEventById(
+    eventId: string,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<EventDetailView, GetEventError>> {
+    const eventResult = await this.events.findById(eventId);
+    if (eventResult.ok === false) {
+      return Err(UnexpectedDependencyError(eventResult.value.message));
+    }
+
+    const event = eventResult.value;
+        if (!event) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    if (!this.canViewEventDetail(event, actingUserId, actingUserRole)) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    const attendeeCountResult = await this.events.countGoingByEventId(event.id);
+    if (attendeeCountResult.ok === false) {
+      return Err(
+        UnexpectedDependencyError(attendeeCountResult.value.message),
+      );
+    }
+
+    const detailView: EventDetailView = {
+      event,
+      attendeeCount: attendeeCountResult.value,
+    };
+
+    return Ok(detailView);
   }
 
   async getOrganizerDashboard(
@@ -297,6 +343,20 @@ class EventService implements IEventService {
 
   private canCreateEvents(role: UserRole): boolean {
     return role === "admin" || role === "staff";
+  }
+
+  private canViewEventDetail(
+    event: IEventRecord,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): boolean {
+    if (event.status === "draft") {
+      return (
+        actingUserRole === "admin" || event.organizerId === actingUserId
+      );
+    }
+
+    return true;
   }
 
   private normalizeActingUserId(
