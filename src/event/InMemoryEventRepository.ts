@@ -1,136 +1,49 @@
-import { randomUUID } from "node:crypto";
-import { Err, Ok, type Result } from "../lib/result";
+import type { Result } from "../lib/result";
 import type { EventStatus, IEventRecord } from "./Event";
-import type {
-  EventRepositoryError,
-  ICreateEventRecordInput,
-  IEventRepository,
-} from "./EventRepository";
 
-export type RsvpStatus = "going" | "waitlisted" | "cancelled";
+export type EventRepositoryError = {
+  name: "UnexpectedDependencyError";
+  message: string;
+};
 
-export interface IRsvpRecord {
-  id: string;
-  eventId: string;
-  userId: string;
-  status: RsvpStatus;
+export interface ICreateEventRecordInput {
+  title: string;
+  description: string;
+  location: string;
+  category: string;
+  status: EventStatus;
+  capacity: number | null;
+  startDatetime: string;
+  endDatetime: string;
+  organizerId: string;
   createdAt: string;
+  updatedAt: string;
 }
 
-const eventStore = new Map<string, IEventRecord>();
-const rsvpStore: IRsvpRecord[] = [];
-
-function UnexpectedDependencyError(message: string): EventRepositoryError {
-  return {
-    name: "UnexpectedDependencyError",
-    message,
-  };
-}
-
-class InMemoryEventRepository implements IEventRepository {
-  async createEvent(
+export interface IEventRepository {
+  createEvent(
     input: ICreateEventRecordInput,
-  ): Promise<Result<IEventRecord, EventRepositoryError>> {
-    try {
-      const event: IEventRecord = {
-        id: randomUUID(),
-        title: input.title,
-        description: input.description,
-        location: input.location,
-        category: input.category,
-        status: input.status,
-        capacity: input.capacity,
-        startDatetime: input.startDatetime,
-        endDatetime: input.endDatetime,
-        organizerId: input.organizerId,
-        createdAt: input.createdAt,
-        updatedAt: input.updatedAt,
-      };
+  ): Promise<Result<IEventRecord, EventRepositoryError>>;
 
-      eventStore.set(event.id, event);
-      return Ok(event);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to create event."));
-    }
-  }
-
-  async findById(
+  findById(
     eventId: string,
-  ): Promise<Result<IEventRecord | null, EventRepositoryError>> {
-    try {
-      return Ok(eventStore.get(eventId) ?? null);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to read event."));
-    }
-  }
+  ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
 
-  async listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>> {
-    try {
-      return Ok([...eventStore.values()]);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to list events."));
-    }
-  }
+  listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>>;
 
-  async listByOrganizerId(
+  listByOrganizerId(
     organizerId: string,
-  ): Promise<Result<IEventRecord[], EventRepositoryError>> {
-    try {
-      const events = [...eventStore.values()].filter(
-        (event) => event.organizerId === organizerId,
-      );
-      return Ok(events);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to read organizer events."));
-    }
-  }
+  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
 
-  async listAll(): Promise<Result<IEventRecord[], EventRepositoryError>> {
-    try {
-      return Ok([...eventStore.values()]);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to list all events."));
-    }
-  }
+  listAll(): Promise<Result<IEventRecord[], EventRepositoryError>>;
 
-  async countGoingByEventId(
+  countGoingByEventId(
     eventId: string,
-  ): Promise<Result<number, EventRepositoryError>> {
-    try {
-      const count = rsvpStore.filter(
-        (rsvp) => rsvp.eventId === eventId && rsvp.status === "going",
-      ).length;
-      return Ok(count);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to read attendee counts."));
-    }
-  }
+  ): Promise<Result<number, EventRepositoryError>>;
 
-  async updateStatus(
+  updateStatus(
     eventId: string,
     status: EventStatus,
     updatedAt: string,
-  ): Promise<Result<IEventRecord | null, EventRepositoryError>> {
-    try {
-      const event = eventStore.get(eventId);
-      if (!event) {
-        return Ok(null);
-      }
-
-      const updatedEvent: IEventRecord = {
-        ...event,
-        status,
-        updatedAt,
-      };
-
-      eventStore.set(eventId, updatedEvent);
-      return Ok(updatedEvent);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to update event status."));
-    }
-  }
-}
-
-export function CreateInMemoryEventRepository(): IEventRepository {
-  return new InMemoryEventRepository();
+  ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
 }
