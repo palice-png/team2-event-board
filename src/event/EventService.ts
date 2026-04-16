@@ -35,8 +35,8 @@ export interface OrganizerDashboardView {
 }
 
 export type DashboardError =
-  | ReturnType<typeof UnauthorizedError>
-  | ReturnType<typeof UnexpectedDependencyError>;
+  | UnauthorizedError
+  | UnexpectedDependencyError;
 
 export interface IEventService {
   createEvent(
