@@ -130,6 +130,44 @@ class ExpressApp implements IApp {
   }
 
   private registerRoutes(): void {
+        // ── Event creation routes ────────────────────────────────────────
+
+    this.app.get(
+      "/events/new",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can create events.",
+          )
+        ) {
+          return;
+        }
+
+        await this.eventController.showCreateEventForm(req, res);
+      }),
+    );
+
+    this.app.post(
+      "/events",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can create events.",
+          )
+        ) {
+          return;
+        }
+
+        await this.eventController.createEventFromForm(req, res);
+      }),
+    );
+
     // ── Public routes ────────────────────────────────────────────────
 
     this.app.get(
