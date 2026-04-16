@@ -1,19 +1,19 @@
 import { Ok, Err, type Result } from "../lib/result";
 import type { IEventRepository } from "../event/EventRepository";
 import type {
-  IRsvpRepository,
-  IRsvpRecord,
+  IRsvpToggleRepository,
+  IRsvpToggleRecord,
   RsvpToggleResult,
   WaitlistPromotionResult,
   RsvpError,
   WaitlistError,
-} from "./Rsvp";
+} from "./RsvpToggle";
 import {
   EventNotFoundError,
   InvalidEventStateError,
   UnexpectedDependencyError,
   WaitlistEventNotFoundError,
-} from "./Rsvp";
+} from "./RsvpToggle";
 import type { UserRole } from "../auth/User";
 
 export interface IRsvpService {
@@ -37,19 +37,19 @@ export interface IRsvpService {
 
 export function CreateRsvpService(
   eventRepo: IEventRepository,
-  rsvpRepo: IRsvpRepository,
+  rsvpRepo: IRsvpToggleRepository,
 ): IRsvpService {
 
   async function resolveNewStatus(
     eventId: string,
-  ): Promise<"going" | "waitlisted"> {
+  ): Promise<"confirmed" | "waitlisted"> {
     const activeResult = await rsvpRepo.findActiveForEvent(eventId);
-    if (!activeResult.ok) return "going";
+    if (!activeResult.ok) return "confirmed";
     const event = await eventRepo.findById(eventId);
-    if (!event.ok || !event.value) return "going";
+    if (!event.ok || !event.value) return "confirmed";
     const capacity = event.value.capacity;
-    if (capacity === null) return "going";
-    return activeResult.value.length >= capacity ? "waitlisted" : "going";
+    if (capacity === null) return "confirmed";
+    return activeResult.value.length >= capacity ? "waitlisted" : "confirmed";
   }
 
   async function toggleRsvp(
@@ -86,7 +86,7 @@ export function CreateRsvpService(
       return Ok({ rsvp: createResult.value, promoted: null });
     }
 
-    if (existing.status === "going") {
+    if (existing.status === "confirmed") {
       const promotionResult = await cancelRsvpAndPromoteWaitlist(
         eventId,
         actingUserId,
@@ -139,11 +139,11 @@ export function CreateRsvpService(
       return Ok({ cancelled: cancelResult.value, promoted: null });
     }
 
-    let promoted: IRsvpRecord | null = null;
+    let promoted: IRsvpToggleRecord | null = null;
     if (waitlistResult.value.length > 0) {
       const promoteResult = await rsvpRepo.updateStatus(
         waitlistResult.value[0].id,
-        "going",
+        "confirmed",
       );
       if (promoteResult.ok) {
         promoted = promoteResult.value;

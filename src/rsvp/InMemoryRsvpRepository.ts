@@ -1,25 +1,25 @@
 import { randomUUID } from "node:crypto";
 import { Ok, Err, type Result } from "../lib/result";
 import type {
-  IRsvpRecord,
-  RsvpStatus,
+  IRsvpToggleRecord,
+  RsvpToggleStatus,
   RsvpError,
   ICreateRsvpInput,
-  IRsvpRepository,
-} from "./Rsvp";
+  IRsvpToggleRepository,
+} from "./RsvpToggle";
 
 function UnexpectedDependencyError(message: string): RsvpError {
   return { name: "UnexpectedDependencyError", message };
 }
 
-const rsvpStore = new Map<string, IRsvpRecord>();
+const rsvpStore = new Map<string, IRsvpToggleRecord>();
 
-class InMemoryRsvpRepository implements IRsvpRepository {
+class InMemoryRsvpRepository implements IRsvpToggleRepository {
   async createRsvp(
     input: ICreateRsvpInput,
-  ): Promise<Result<IRsvpRecord, RsvpError>> {
+  ): Promise<Result<IRsvpToggleRecord, RsvpError>> {
     try {
-      const rsvp: IRsvpRecord = {
+      const rsvp: IRsvpToggleRecord = {
         id: randomUUID(),
         eventId: input.eventId,
         userId: input.userId,
@@ -36,7 +36,7 @@ class InMemoryRsvpRepository implements IRsvpRepository {
   async findByUserAndEvent(
     userId: string,
     eventId: string,
-  ): Promise<Result<IRsvpRecord | null, RsvpError>> {
+  ): Promise<Result<IRsvpToggleRecord | null, RsvpError>> {
     try {
       for (const rsvp of rsvpStore.values()) {
         if (rsvp.userId === userId && rsvp.eventId === eventId) {
@@ -51,8 +51,8 @@ class InMemoryRsvpRepository implements IRsvpRepository {
 
   async updateStatus(
     rsvpId: string,
-    status: RsvpStatus,
-  ): Promise<Result<IRsvpRecord, RsvpError>> {
+    status: RsvpToggleStatus,
+  ): Promise<Result<IRsvpToggleRecord, RsvpError>> {
     try {
       const rsvp = rsvpStore.get(rsvpId);
       if (!rsvp) {
@@ -67,10 +67,10 @@ class InMemoryRsvpRepository implements IRsvpRepository {
 
   async findActiveForEvent(
     eventId: string,
-  ): Promise<Result<IRsvpRecord[], RsvpError>> {
+  ): Promise<Result<IRsvpToggleRecord[], RsvpError>> {
     try {
       const active = [...rsvpStore.values()].filter(
-        (r) => r.eventId === eventId && r.status === "going",
+        (r) => r.eventId === eventId && r.status === "confirmed",
       );
       return Ok(active);
     } catch {
@@ -80,7 +80,7 @@ class InMemoryRsvpRepository implements IRsvpRepository {
 
   async findWaitlistedForEvent(
     eventId: string,
-  ): Promise<Result<IRsvpRecord[], RsvpError>> {
+  ): Promise<Result<IRsvpToggleRecord[], RsvpError>> {
     try {
       const waitlisted = [...rsvpStore.values()]
         .filter((r) => r.eventId === eventId && r.status === "waitlisted")
@@ -93,19 +93,8 @@ class InMemoryRsvpRepository implements IRsvpRepository {
       return Err(UnexpectedDependencyError("Unable to list waitlisted RSVPs."));
     }
   }
-
-  async findByUser(userId: string): Promise<Result<IRsvpRecord[], RsvpError>> {
-    try {
-      const userRsvps = [...rsvpStore.values()].filter(
-        (r) => r.userId === userId,
-      );
-      return Ok(userRsvps);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to list user RSVPs."));
-    }
-  }
 }
 
-export function CreateInMemoryRsvpRepository(): IRsvpRepository {
+export function CreateInMemoryRsvpRepository(): IRsvpToggleRepository {
   return new InMemoryRsvpRepository();
 }

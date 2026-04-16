@@ -1,79 +1,40 @@
-import type { Result } from "../lib/result";
-
-export type RsvpStatus = "going" | "waitlisted" | "cancelled";
+export type RsvpStatus = "confirmed" | "waitlisted" | "cancelled";
+export type EventStatus = "published" | "cancelled" | "past";
 
 export interface IRsvpRecord {
   id: string;
   eventId: string;
   userId: string;
   status: RsvpStatus;
-  createdAt: string;
 }
 
-export interface RsvpToggleResult {
-  rsvp: IRsvpRecord;
-  promoted: IRsvpRecord | null;
+// Minimal event shape needed for the dashboard join.
+// Will be replaced by the shared EventRecord from Feature 1 once it lands.
+export interface IEventStub {
+  id: string;
+  title: string;
+  date: string; // ISO 8601, e.g. "2026-05-10T18:00:00Z"
+  location: string;
+  status: EventStatus;
 }
 
-export interface WaitlistPromotionResult {
-  cancelled: IRsvpRecord;
-  promoted: IRsvpRecord | null;
-}
-
-export type RsvpError =
-  | { name: "EventNotFoundError"; message: string }
-  | { name: "UnauthorizedError"; message: string }
-  | { name: "InvalidEventStateError"; message: string }
-  | { name: "UnexpectedDependencyError"; message: string };
-
-export type WaitlistError =
-  | { name: "EventNotFoundError"; message: string }
-  | { name: "UnexpectedDependencyError"; message: string };
-
-export const EventNotFoundError = (message: string): RsvpError => ({
-  name: "EventNotFoundError",
-  message,
-});
-
-export const UnauthorizedError = (message: string): RsvpError => ({
-  name: "UnauthorizedError",
-  message,
-});
-
-export const InvalidEventStateError = (message: string): RsvpError => ({
-  name: "InvalidEventStateError",
-  message,
-});
-
-export const UnexpectedDependencyError = (message: string): RsvpError => ({
-  name: "UnexpectedDependencyError",
-  message,
-});
-
-export const WaitlistEventNotFoundError = (message: string): WaitlistError => ({
-  name: "EventNotFoundError",
-  message,
-});
-
-export interface ICreateRsvpInput {
-  eventId: string;
-  userId: string;
+export interface RsvpWithEvent {
+  rsvpId: string;
   status: RsvpStatus;
+  event: IEventStub;
 }
 
-export interface IRsvpRepository {
-  createRsvp(input: ICreateRsvpInput): Promise<Result<IRsvpRecord, RsvpError>>;
-  findByUserAndEvent(
-    userId: string,
-    eventId: string,
-  ): Promise<Result<IRsvpRecord | null, RsvpError>>;
-  updateStatus(
-    rsvpId: string,
-    status: RsvpStatus,
-  ): Promise<Result<IRsvpRecord, RsvpError>>;
-  findActiveForEvent(eventId: string): Promise<Result<IRsvpRecord[], RsvpError>>;
-  findWaitlistedForEvent(
-    eventId: string,
-  ): Promise<Result<IRsvpRecord[], RsvpError>>;
-  findByUser(userId: string): Promise<Result<IRsvpRecord[], RsvpError>>;
+export interface MyRsvpsView {
+  upcoming: RsvpWithEvent[];
+  pastOrCancelled: RsvpWithEvent[];
 }
+
+export type MyRsvpsError =
+  | { name: "UnauthorizedError"; message: string }
+  | { name: "UnexpectedDependencyError"; message: string };
+
+export const UnauthorizedError = (message: string): MyRsvpsError =>
+  ({ name: "UnauthorizedError", message });
+
+export const UnexpectedDependencyError = (message: string): MyRsvpsError =>
+  ({ name: "UnexpectedDependencyError", message });
