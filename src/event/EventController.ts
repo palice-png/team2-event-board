@@ -7,12 +7,14 @@ import {
 import type { ILoggingService } from "../service/LoggingService";
 import type {
   DashboardError,
+  EventDetailView,
   ICreateEventInput,
   IEventService,
 } from "./EventService";
 import type {
   CancelEventError,
   CreateEventError,
+  GetEventError,
   PublishEventError,
 } from "./errors";
 
@@ -42,6 +44,12 @@ export interface IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+  ): Promise<void>;
+  showEventDetail(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
   ): Promise<void>;
 }
 
@@ -87,6 +95,18 @@ class EventController implements IEventController {
     if (error.name === "UnauthorizedError") return 403;
     if (error.name === "InvalidEventStateError") return 409;
     return 500;
+  }
+
+  private buildEventDetailViewModel(
+    session: IAppBrowserSession,
+    detail: EventDetailView,
+  ) {
+    return {
+      pageError: null,
+      session,
+      event: detail.event,
+      attendeeCount: detail.attendeeCount,
+    };
   }
 
   async showCreateForm(
@@ -144,6 +164,53 @@ class EventController implements IEventController {
 
     this.logger.info(`Created draft event ${result.value.id}`);
     res.redirect("/organizer/dashboard");
+  }
+
+  async showEventDetail(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    const result = await this.service.getEventById(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
+    if (result.ok === false) {
+      const status = this.mapErrorStatus(result.value as GetEventError);
+      const log = status >= 500 ? this.logger.error : this.logger.warn;
+      log.call(this.logger, `Load event detail failed: ${result.value.message}`);
+
+      if (status === 404) {
+        res.status(404).render("partials/error", {
+          message: "Event not found.",
+          layout: false,
+        });
+        return;
+      }
+
+      res.status(status).render("partials/error", {
+        message: result.value.message,
+        layout: false,
+      });
+      return;
+    }
+
+    res.render(
+      "events/detail",
+      this.buildEventDetailViewModel(session, result.value),
+    );
   }
 
   async showOrganizerDashboard(
