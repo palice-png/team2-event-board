@@ -1,0 +1,81 @@
+<div class="mb-4">
+  <a href="/events" class="text-blue-700 text-sm no-underline hover:underline">&larr; All Events</a>
+</div>
+
+<% if (pageError) { %>
+  <%- include("../partials/error", { message: pageError }) %>
+<% } %>
+
+<section class="p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg mb-5">
+  <div class="flex items-start justify-between gap-4 flex-wrap mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900 mb-1"><%= event.title %></h1>
+      <p class="text-slate-500 text-sm"><%= event.location %> &middot; <%= event.category %></p>
+    </div>
+    <span class="text-xs px-2.5 py-1 rounded-full border font-medium
+      <%= event.status === 'published' ? 'bg-green-50 text-green-700 border-green-200' :
+          event.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-200' :
+          'bg-slate-100 text-slate-600 border-slate-200' %>">
+      <%= event.status.charAt(0).toUpperCase() + event.status.slice(1) %>
+    </span>
+  </div>
+
+  <p class="text-slate-700 mb-4"><%= event.description %></p>
+
+  <div class="grid grid-cols-2 gap-3 text-sm text-slate-600 mb-4">
+    <div><span class="font-medium text-slate-800">Starts:</span> <%= event.startDatetime %></div>
+    <div><span class="font-medium text-slate-800">Ends:</span> <%= event.endDatetime %></div>
+    <% if (event.capacity !== null) { %>
+      <div><span class="font-medium text-slate-800">Capacity:</span> <%= event.capacity %> attendees</div>
+    <% } %>
+  </div>
+
+  <% if (session.authenticatedUser) { %>
+    <div class="mt-4 p-4 border border-slate-200 rounded-xl bg-slate-50">
+
+      <% if (rsvpStatus === 'going') { %>
+        <p class="text-green-700 font-medium mb-2">&#10003; You&apos;re going to this event!</p>
+        <form method="POST" action="/events/<%= event.id %>/rsvp">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium cursor-pointer hover:bg-red-100">
+            Cancel my RSVP
+          </button>
+        </form>
+
+      <% } else if (rsvpStatus === 'waitlisted') { %>
+        <p class="text-amber-700 font-medium mb-1">
+          &#9203; You&apos;re on the waitlist<% if (waitlistPosition !== null) { %> &mdash; position #<%= waitlistPosition %><% } %>
+        </p>
+        <p class="text-slate-500 text-sm mb-2">You&apos;ll be automatically promoted if a spot opens up.</p>
+        <form method="POST" action="/events/<%= event.id %>/rsvp">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-sm font-medium cursor-pointer hover:bg-amber-100">
+            Leave waitlist
+          </button>
+        </form>
+
+      <% } else if (rsvpStatus === 'cancelled') { %>
+        <p class="text-slate-500 mb-2">You previously cancelled your RSVP.</p>
+        <form method="POST" action="/events/<%= event.id %>/rsvp">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700">
+            RSVP again
+          </button>
+        </form>
+
+      <% } else { %>
+        <% if (event.status === 'published') { %>
+          <form method="POST" action="/events/<%= event.id %>/rsvp">
+            <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700">
+              RSVP to this event
+            </button>
+          </form>
+        <% } else { %>
+          <p class="text-slate-400 text-sm">RSVPs are not available for this event.</p>
+        <% } %>
+      <% } %>
+
+    </div>
+  <% } else { %>
+    <div class="mt-4 p-4 border border-slate-200 rounded-xl bg-slate-50 text-slate-500 text-sm">
+      <a href="/login" class="text-blue-700 font-medium hover:underline">Log in</a> to RSVP.
+    </div>
+  <% } %>
+</section>

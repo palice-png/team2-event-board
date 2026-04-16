@@ -1,0 +1,45 @@
+<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+  <h1 class="text-3xl font-bold text-slate-900 mb-1">Events</h1>
+  <p class="text-slate-500">Browse and RSVP to upcoming published events.</p>
+</section>
+
+<% if (pageError) { %>
+  <%- include("../partials/error", { message: pageError }) %>
+<% } %>
+
+<% if (events.length === 0) { %>
+  <div class="p-6 border border-slate-200 rounded-2xl bg-white shadow text-slate-500">
+    No published events yet.
+  </div>
+<% } %>
+
+<div class="flex flex-col gap-4">
+  <% for (const event of events) { %>
+    <div class="p-6 border border-slate-200 rounded-2xl bg-white shadow-lg flex flex-col gap-2">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 class="text-xl font-semibold text-slate-900">
+            <a href="/events/<%= event.id %>" class="no-underline hover:underline text-blue-700">
+              <%= event.title %>
+            </a>
+          </h2>
+          <p class="text-slate-500 text-sm mt-0.5">
+            <%= event.location %> &middot; <%= event.category %>
+          </p>
+        </div>
+        <% if (event.capacity !== null) { %>
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+            Capacity: <%= event.capacity %>
+          </span>
+        <% } %>
+      </div>
+      <p class="text-slate-600 text-sm"><%= event.description %></p>
+      
+        href="/events/<%= event.id %>"
+        class="self-start mt-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium no-underline hover:bg-blue-700"
+      >
+        View &amp; RSVP
+      </a>
+    </div>
+  <% } %>
+</div>
