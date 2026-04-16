@@ -20,4 +20,19 @@
     <p><strong>Status:</strong> <%= event.status %></p>
     <p><strong>Organizer ID:</strong> <%= event.organizerId %></p>
   </section>
+
+  <section>
+    <h3>Date and Time</h3>
+    <p><strong>Starts:</strong> <%= event.startDatetime %></p>
+    <p><strong>Ends:</strong> <%= event.endDatetime %></p>
+  </section>
+
+  <section>
+    <h3>Attendance</h3>
+    <% if (event.capacity === null) { %>
+      <p><strong>Attendees:</strong> <%= attendeeCount %> / No limit</p>
+    <% } else { %>
+      <p><strong>Attendees:</strong> <%= attendeeCount %> / <%= event.capacity %></p>
+    <% } %>
+  </section>
 </div>
