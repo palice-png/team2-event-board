@@ -28,7 +28,15 @@
           <li class="p-4 border border-slate-200 rounded-xl bg-slate-50/50">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 mb-1"><%= ev.title %></h3>
+                <h3 class="text-lg font-semibold mb-1">
+                  <a
+                    href="/events/<%= ev.id %>"
+                    class="text-blue-700 no-underline hover:underline"
+                  >
+                    <%= ev.title %>
+                  </a>
+                </h3>
+                <p class="text-sm text-slate-500 mb-2">View full event details</p>
                 <p class="text-sm text-slate-600 mb-1">
                   <strong class="text-slate-700">Date:</strong> <%= ev.startDatetime %>
                 </p>
