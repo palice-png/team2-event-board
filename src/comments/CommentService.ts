@@ -11,6 +11,7 @@ export type CommentError =
   | { name: "CommentNotFoundError"; message: string };
 
 export class CommentService {
+    constructor(private repo: ICommentRepository) {}
     createComment(
         eventId: string,
         content: string,
@@ -73,6 +74,6 @@ export class CommentService {
         this.repo.delete(commentId);
     
         return Ok(undefined);
-      }
     }
+    
 }
