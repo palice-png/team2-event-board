@@ -100,7 +100,12 @@ class EventController implements IEventController {
   private buildEventDetailViewModel(
     session: IAppBrowserSession,
     detail: EventDetailView,
-  ) {
+  ): {
+    pageError: null;
+    session: IAppBrowserSession;
+    event: EventDetailView["event"];
+    attendeeCount: number;
+  } {
     return {
       pageError: null,
       session,
