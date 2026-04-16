@@ -35,8 +35,8 @@ export interface OrganizerDashboardView {
 }
 
 export type DashboardError =
-  | UnauthorizedError
-  | UnexpectedDependencyError;
+  | ReturnType<typeof UnauthorizedError>
+  | ReturnType<typeof UnexpectedDependencyError>;
 
 export interface IEventService {
   createEvent(
@@ -152,7 +152,9 @@ class EventService implements IEventService {
     actingUserRole: UserRole,
   ): Promise<Result<OrganizerDashboardView, DashboardError>> {
     if (actingUserRole === "user") {
-      return Err(UnauthorizedError("You are not allowed to access organizer dashboard."));
+      return Err(
+        UnauthorizedError("You are not allowed to access organizer dashboard."),
+      );
     }
 
     const eventsResult =
@@ -169,9 +171,13 @@ class EventService implements IEventService {
     const cancelledOrPast: OrganizerDashboardEventItem[] = [];
 
     for (const event of eventsResult.value) {
-      const attendeeCountResult = await this.events.countGoingByEventId(event.id);
+      const attendeeCountResult = await this.events.countGoingByEventId(
+        event.id,
+      );
       if (attendeeCountResult.ok === false) {
-        return Err(UnexpectedDependencyError(attendeeCountResult.value.message));
+        return Err(
+          UnexpectedDependencyError(attendeeCountResult.value.message),
+        );
       }
 
       const item: OrganizerDashboardEventItem = {
@@ -215,7 +221,9 @@ class EventService implements IEventService {
       actingUserRole === "staff" && event.organizerId === actingUserId;
 
     if (!canPublishAny && !canPublishOwn) {
-      return Err(UnauthorizedError("You are not allowed to publish this event."));
+      return Err(
+        UnauthorizedError("You are not allowed to publish this event."),
+      );
     }
 
     if (event.status !== "draft") {
@@ -259,11 +267,15 @@ class EventService implements IEventService {
       actingUserRole === "staff" && event.organizerId === actingUserId;
 
     if (!canCancelAny && !canCancelOwn) {
-      return Err(UnauthorizedError("You are not allowed to cancel this event."));
+      return Err(
+        UnauthorizedError("You are not allowed to cancel this event."),
+      );
     }
 
     if (event.status !== "published") {
-      return Err(InvalidEventStateError("Only published events can be cancelled."));
+      return Err(
+        InvalidEventStateError("Only published events can be cancelled."),
+      );
     }
 
     const updatedResult = await this.events.updateStatus(

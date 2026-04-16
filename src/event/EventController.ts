@@ -1,12 +1,29 @@
 import type { Response } from "express";
-import { getAuthenticatedUser, type AppSessionStore } from "../session/AppSession";
+import {
+  getAuthenticatedUser,
+  type AppSessionStore,
+  type IAppBrowserSession,
+} from "../session/AppSession";
 import type { ILoggingService } from "../service/LoggingService";
-import type { IEventService } from "./EventService";
+import type { DashboardError, IEventService } from "./EventService";
 import type { CancelEventError, PublishEventError } from "./errors";
 
 export interface IEventController {
-  publishFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void>;
-  cancelFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void>;
+  showOrganizerDashboard(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
+  publishFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void>;
+  cancelFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void>;
 }
 
 class EventController implements IEventController {
@@ -15,14 +32,20 @@ class EventController implements IEventController {
     private readonly logger: ILoggingService,
   ) {}
 
-  private mapErrorStatus(error: PublishEventError | CancelEventError): number {
+  private mapErrorStatus(
+    error: PublishEventError | CancelEventError | DashboardError,
+  ): number {
     if (error.name === "EventNotFoundError") return 404;
     if (error.name === "UnauthorizedError") return 403;
     if (error.name === "InvalidEventStateError") return 409;
     return 500;
   }
 
-  async publishFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void> {
+  async showOrganizerDashboard(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -32,7 +55,62 @@ class EventController implements IEventController {
       return;
     }
 
-    const result = await this.service.publishEvent(eventId, currentUser.userId, currentUser.role);
+    const result = await this.service.getOrganizerDashboard(
+      currentUser.userId,
+      currentUser.role,
+    );
+
+    if (result.ok === false) {
+      const status = this.mapErrorStatus(result.value);
+      const log = status >= 500 ? this.logger.error : this.logger.warn;
+      log.call(
+        this.logger,
+        `Load organizer dashboard failed: ${result.value.message}`,
+      );
+
+      if (status === 403) {
+        res.status(status).render("partials/error", {
+          message: result.value.message,
+          layout: false,
+        });
+        return;
+      }
+
+      res.status(status).render("events/organizer-dashboard", {
+        pageError: result.value.message,
+        session,
+        dashboard: { published: [], draft: [], cancelledOrPast: [] },
+      });
+      return;
+    }
+
+    res.render("events/organizer-dashboard", {
+      pageError: null,
+      session,
+      dashboard: result.value,
+    });
+  }
+
+  async publishFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    const result = await this.service.publishEvent(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
     if (result.ok === false) {
       const status = this.mapErrorStatus(result.value);
       const log = status >= 500 ? this.logger.error : this.logger.warn;
@@ -48,7 +126,11 @@ class EventController implements IEventController {
     res.status(200).send("Event published.");
   }
 
-  async cancelFromForm(res: Response, eventId: string, store: AppSessionStore): Promise<void> {
+  async cancelFromForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+  ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -58,7 +140,12 @@ class EventController implements IEventController {
       return;
     }
 
-    const result = await this.service.cancelEvent(eventId, currentUser.userId, currentUser.role);
+    const result = await this.service.cancelEvent(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
     if (result.ok === false) {
       const status = this.mapErrorStatus(result.value);
       const log = status >= 500 ? this.logger.error : this.logger.warn;

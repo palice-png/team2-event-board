@@ -202,6 +202,22 @@ class ExpressApp implements IApp {
       }),
     );
 
+    this.app.get(
+      "/organizer/dashboard",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.eventController.showOrganizerDashboard(
+          res,
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
+
     // ── Admin routes ─────────────────────────────────────────────────
 
     this.app.get(
