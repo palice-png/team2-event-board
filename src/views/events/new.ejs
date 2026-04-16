@@ -24,7 +24,7 @@
           type="text"
           value="<%= values.title ?? '' %>"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -37,7 +37,7 @@
           name="description"
           rows="5"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         ><%= values.description ?? '' %></textarea>
       </div>
 
@@ -51,7 +51,7 @@
           type="text"
           value="<%= values.location ?? '' %>"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -65,7 +65,7 @@
           type="text"
           value="<%= values.category ?? '' %>"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -80,7 +80,7 @@
           min="1"
           step="1"
           value="<%= values.capacity ?? '' %>"
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
         <p class="mt-2 text-sm text-slate-500">
           Leave blank if the event has no attendance limit.
@@ -99,7 +99,7 @@
           type="datetime-local"
           value="<%= values.startDatetime ?? '' %>"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
 
@@ -113,13 +113,18 @@
           type="datetime-local"
           value="<%= values.endDatetime ?? '' %>"
           required
-          class="w-full"
+          class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
     </div>
 
-    <button type="submit">
-      Create Event
-    </button>
+    <div class="pt-2">
+      <button
+        type="submit"
+        class="px-5 py-3 rounded-xl bg-blue-600 text-white font-medium cursor-pointer hover:bg-blue-700 shadow-sm"
+      >
+        Create Event
+      </button>
+    </div>
   </form>
 </section>
