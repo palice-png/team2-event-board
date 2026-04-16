@@ -1,62 +1,77 @@
 <% const values = formData ?? {}; %>
 
-<div>
-  <h1>Create Event</h1>
-  <p>Newly created events start as drafts.</p>
+<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+  <h1 class="text-3xl font-bold text-slate-900 mb-3">Create Event</h1>
+  <p class="text-slate-500 mb-0">
+    Newly created events start as drafts.
+  </p>
+</section>
 
-  <% if (errorMessage) { %>
-    <div>
-      <strong>Unable to create event</strong>
-      <p><%= errorMessage %></p>
-    </div>
-  <% } %>
+<% if (errorMessage) { %>
+  <%- include("../partials/error", { message: errorMessage }) %>
+<% } %>
 
-  <form action="/events" method="post">
+<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+  <form action="/events" method="post" class="space-y-4">
     <div>
-      <label for="title">Title</label>
+      <label for="title" class="block text-sm font-medium text-slate-700 mb-2">
+        Title
+      </label>
       <input
         id="title"
         name="title"
         type="text"
         value="<%= values.title ?? '' %>"
         required
+        class="w-full"
       />
     </div>
 
     <div>
-      <label for="description">Description</label>
+      <label for="description" class="block text-sm font-medium text-slate-700 mb-2">
+        Description
+      </label>
       <textarea
         id="description"
         name="description"
         rows="5"
         required
+        class="w-full"
       ><%= values.description ?? '' %></textarea>
     </div>
 
     <div>
-      <label for="location">Location</label>
+      <label for="location" class="block text-sm font-medium text-slate-700 mb-2">
+        Location
+      </label>
       <input
         id="location"
         name="location"
         type="text"
         value="<%= values.location ?? '' %>"
         required
+        class="w-full"
       />
     </div>
 
     <div>
-      <label for="category">Category</label>
+      <label for="category" class="block text-sm font-medium text-slate-700 mb-2">
+        Category
+      </label>
       <input
         id="category"
         name="category"
         type="text"
         value="<%= values.category ?? '' %>"
         required
+        class="w-full"
       />
     </div>
 
     <div>
-      <label for="capacity">Capacity</label>
+      <label for="capacity" class="block text-sm font-medium text-slate-700 mb-2">
+        Capacity
+      </label>
       <input
         id="capacity"
         name="capacity"
@@ -64,32 +79,43 @@
         min="1"
         step="1"
         value="<%= values.capacity ?? '' %>"
+        class="w-full"
       />
-      <p>Leave blank if the event has no attendance limit.</p>
+      <p class="mt-2 text-sm text-slate-500">
+        Leave blank if the event has no attendance limit.
+      </p>
     </div>
 
     <div>
-      <label for="startDatetime">Start date and time</label>
+      <label for="startDatetime" class="block text-sm font-medium text-slate-700 mb-2">
+        Start date and time
+      </label>
       <input
         id="startDatetime"
         name="startDatetime"
         type="datetime-local"
         value="<%= values.startDatetime ?? '' %>"
         required
+        class="w-full"
       />
     </div>
 
     <div>
-      <label for="endDatetime">End date and time</label>
+      <label for="endDatetime" class="block text-sm font-medium text-slate-700 mb-2">
+        End date and time
+      </label>
       <input
         id="endDatetime"
         name="endDatetime"
         type="datetime-local"
         value="<%= values.endDatetime ?? '' %>"
         required
+        class="w-full"
       />
     </div>
 
-    <button type="submit">Create Event</button>
+    <button type="submit">
+      Create Event
+    </button>
   </form>
-</div>
+</section>
