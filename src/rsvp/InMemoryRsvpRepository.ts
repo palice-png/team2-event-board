@@ -1,100 +1,83 @@
-import { randomUUID } from "node:crypto";
-import { Ok, Err, type Result } from "../lib/result";
-import type {
-  IRsvpToggleRecord,
-  RsvpToggleStatus,
-  RsvpError,
-  ICreateRsvpInput,
-  IRsvpToggleRepository,
-} from "./RsvpToggle";
+import { Err, Ok, type Result } from "../lib/result";
+import { UnexpectedDependencyError, type MyRsvpsError, type IRsvpRecord, type IEventStub, type RsvpWithEvent } from "./Rsvp";
+import type { IRsvpRepository } from "./RsvpRepository";
 
-function UnexpectedDependencyError(message: string): RsvpError {
-  return { name: "UnexpectedDependencyError", message };
-}
+const DEMO_EVENTS: IEventStub[] = [
+  {
+    id: "event-1",
+    title: "TypeScript Workshop",
+    date: "2026-05-15T18:00:00Z",
+    location: "Room 101",
+    status: "published",
+  },
+  {
+    id: "event-2",
+    title: "Node.js Deep Dive",
+    date: "2026-06-20T14:00:00Z",
+    location: "Auditorium B",
+    status: "published",
+  },
+  {
+    id: "event-3",
+    title: "React Fundamentals",
+    date: "2026-07-10T10:00:00Z",
+    location: "Online",
+    status: "published",
+  },
+  {
+    id: "event-4",
+    title: "Intro to Databases",
+    date: "2026-01-10T09:00:00Z",
+    location: "Lab 3",
+    status: "past",
+  },
+  {
+    id: "event-5",
+    title: "Staff-Only Meetup",
+    date: "2026-06-01T17:00:00Z",
+    location: "Conference Room A",
+    status: "published",
+  },
+];
 
-const rsvpStore = new Map<string, IRsvpToggleRecord>();
+const DEMO_RSVPS: IRsvpRecord[] = [
+  // user-reader: upcoming confirmed
+  { id: "rsvp-1", eventId: "event-1", userId: "user-reader", status: "confirmed" },
+  // user-reader: upcoming waitlisted (further in future, so sorts after rsvp-1)
+  { id: "rsvp-2", eventId: "event-2", userId: "user-reader", status: "waitlisted" },
+  // user-reader: cancelled RSVP on a future published event (goes to pastOrCancelled)
+  { id: "rsvp-3", eventId: "event-3", userId: "user-reader", status: "cancelled" },
+  // user-reader: confirmed RSVP on a past event (goes to pastOrCancelled)
+  { id: "rsvp-4", eventId: "event-4", userId: "user-reader", status: "confirmed" },
+  // different user — must NOT appear in user-reader's results
+  { id: "rsvp-5", eventId: "event-5", userId: "user-staff", status: "confirmed" },
+];
 
-class InMemoryRsvpRepository implements IRsvpToggleRepository {
-  async createRsvp(
-    input: ICreateRsvpInput,
-  ): Promise<Result<IRsvpToggleRecord, RsvpError>> {
+class InMemoryRsvpRepository implements IRsvpRepository {
+  constructor(
+    private readonly rsvps: IRsvpRecord[],
+    private readonly events: IEventStub[],
+  ) {}
+
+  async findByUserId(userId: string): Promise<Result<RsvpWithEvent[], MyRsvpsError>> {
     try {
-      const rsvp: IRsvpToggleRecord = {
-        id: randomUUID(),
-        eventId: input.eventId,
-        userId: input.userId,
-        status: input.status,
-        createdAt: new Date().toISOString(),
-      };
-      rsvpStore.set(rsvp.id, rsvp);
-      return Ok(rsvp);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to create RSVP."));
-    }
-  }
+      const userRsvps = this.rsvps.filter((r) => r.userId === userId);
+      const joined: RsvpWithEvent[] = [];
 
-  async findByUserAndEvent(
-    userId: string,
-    eventId: string,
-  ): Promise<Result<IRsvpToggleRecord | null, RsvpError>> {
-    try {
-      for (const rsvp of rsvpStore.values()) {
-        if (rsvp.userId === userId && rsvp.eventId === eventId) {
-          return Ok(rsvp);
+      for (const rsvp of userRsvps) {
+        const event = this.events.find((e) => e.id === rsvp.eventId);
+        if (event) {
+          joined.push({ rsvpId: rsvp.id, status: rsvp.status, event });
         }
       }
-      return Ok(null);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to find RSVP."));
-    }
-  }
 
-  async updateStatus(
-    rsvpId: string,
-    status: RsvpToggleStatus,
-  ): Promise<Result<IRsvpToggleRecord, RsvpError>> {
-    try {
-      const rsvp = rsvpStore.get(rsvpId);
-      if (!rsvp) {
-        return Err(UnexpectedDependencyError("RSVP not found."));
-      }
-      rsvp.status = status;
-      return Ok(rsvp);
+      return Ok(joined);
     } catch {
-      return Err(UnexpectedDependencyError("Unable to update RSVP."));
-    }
-  }
-
-  async findActiveForEvent(
-    eventId: string,
-  ): Promise<Result<IRsvpToggleRecord[], RsvpError>> {
-    try {
-      const active = [...rsvpStore.values()].filter(
-        (r) => r.eventId === eventId && r.status === "confirmed",
-      );
-      return Ok(active);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to list active RSVPs."));
-    }
-  }
-
-  async findWaitlistedForEvent(
-    eventId: string,
-  ): Promise<Result<IRsvpToggleRecord[], RsvpError>> {
-    try {
-      const waitlisted = [...rsvpStore.values()]
-        .filter((r) => r.eventId === eventId && r.status === "waitlisted")
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        );
-      return Ok(waitlisted);
-    } catch {
-      return Err(UnexpectedDependencyError("Unable to list waitlisted RSVPs."));
+      return Err(UnexpectedDependencyError("Unable to read RSVP data."));
     }
   }
 }
 
-export function CreateInMemoryRsvpRepository(): IRsvpToggleRepository {
-  return new InMemoryRsvpRepository();
+export function CreateInMemoryRsvpRepository(): IRsvpRepository {
+  return new InMemoryRsvpRepository([...DEMO_RSVPS], [...DEMO_EVENTS]);
 }

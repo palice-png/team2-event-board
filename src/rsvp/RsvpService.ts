@@ -1,177 +1,57 @@
-import { Ok, Err, type Result } from "../lib/result";
-import type { IEventRepository } from "../event/EventRepository";
-import type {
-  IRsvpToggleRepository,
-  IRsvpToggleRecord,
-  RsvpToggleResult,
-  WaitlistPromotionResult,
-  RsvpError,
-  WaitlistError,
-} from "./RsvpToggle";
-import {
-  EventNotFoundError,
-  InvalidEventStateError,
-  UnexpectedDependencyError,
-  WaitlistEventNotFoundError,
-} from "./RsvpToggle";
+import { Err, Ok, type Result } from "../lib/result";
 import type { UserRole } from "../auth/User";
+import {
+  UnauthorizedError,
+  type MyRsvpsError,
+  type MyRsvpsView,
+  type RsvpWithEvent,
+} from "./Rsvp";
+import type { IRsvpRepository } from "./RsvpRepository";
 
 export interface IRsvpService {
-  toggleRsvp(
-    eventId: string,
-    actingUserId: string,
-    actingUserRole: UserRole,
-  ): Promise<Result<RsvpToggleResult, RsvpError>>;
-
-  cancelRsvpAndPromoteWaitlist(
-    eventId: string,
-    actingUserId: string,
-    actingUserRole: UserRole,
-  ): Promise<Result<WaitlistPromotionResult, RsvpError>>;
-
-  getWaitlistPosition(
-    eventId: string,
-    actingUserId: string,
-  ): Promise<Result<number | null, WaitlistError>>;
+  getMyRsvps(actingUserId: string, actingUserRole: UserRole): Promise<Result<MyRsvpsView, MyRsvpsError>>;
 }
 
-export function CreateRsvpService(
-  eventRepo: IEventRepository,
-  rsvpRepo: IRsvpToggleRepository,
-): IRsvpService {
+class RsvpService implements IRsvpService {
+  constructor(private readonly repo: IRsvpRepository) {}
 
-  async function resolveNewStatus(
-    eventId: string,
-  ): Promise<"confirmed" | "waitlisted"> {
-    const activeResult = await rsvpRepo.findActiveForEvent(eventId);
-    if (!activeResult.ok) return "confirmed";
-    const event = await eventRepo.findById(eventId);
-    if (!event.ok || !event.value) return "confirmed";
-    const capacity = event.value.capacity;
-    if (capacity === null) return "confirmed";
-    return activeResult.value.length >= capacity ? "waitlisted" : "confirmed";
-  }
-
-  async function toggleRsvp(
-    eventId: string,
+  async getMyRsvps(
     actingUserId: string,
     actingUserRole: UserRole,
-  ): Promise<Result<RsvpToggleResult, RsvpError>> {
-    const eventResult = await eventRepo.findById(eventId);
-    if (!eventResult.ok) {
-      return Err(UnexpectedDependencyError(eventResult.value.message));
-    }
-    if (!eventResult.value) {
-      return Err(EventNotFoundError(`Event "${eventId}" not found.`));
+  ): Promise<Result<MyRsvpsView, MyRsvpsError>> {
+    if (actingUserRole === "staff") {
+      return Err(UnauthorizedError("Organizers do not have a My RSVPs dashboard."));
     }
 
-    if (eventResult.value.status !== "published") {
-      return Err(InvalidEventStateError("You can only RSVP to published events."));
+    const result = await this.repo.findByUserId(actingUserId);
+    if (!result.ok) {
+      return result;
     }
 
-    const existingResult = await rsvpRepo.findByUserAndEvent(actingUserId, eventId);
-    if (!existingResult.ok) {
-      return Err(UnexpectedDependencyError(existingResult.value.message));
-    }
-    const existing = existingResult.value;
+    const now = new Date();
+    const upcoming: RsvpWithEvent[] = [];
+    const pastOrCancelled: RsvpWithEvent[] = [];
 
-    if (!existing) {
-      const status = await resolveNewStatus(eventId);
-      const createResult = await rsvpRepo.createRsvp({
-        eventId,
-        userId: actingUserId,
-        status,
-      });
-      if (!createResult.ok) return Err(createResult.value);
-      return Ok({ rsvp: createResult.value, promoted: null });
-    }
+    for (const entry of result.value) {
+      const isUpcoming =
+        entry.event.status === "published" &&
+        new Date(entry.event.date) > now &&
+        (entry.status === "confirmed" || entry.status === "waitlisted");
 
-    if (existing.status === "confirmed") {
-      const promotionResult = await cancelRsvpAndPromoteWaitlist(
-        eventId,
-        actingUserId,
-        actingUserRole,
-      );
-      if (!promotionResult.ok) return Err(promotionResult.value);
-      return Ok({
-        rsvp: promotionResult.value.cancelled,
-        promoted: promotionResult.value.promoted,
-      });
-    }
-
-    if (existing.status === "waitlisted") {
-      const cancelResult = await rsvpRepo.updateStatus(existing.id, "cancelled");
-      if (!cancelResult.ok) return Err(cancelResult.value);
-      return Ok({ rsvp: cancelResult.value, promoted: null });
-    }
-
-    if (existing.status === "cancelled") {
-      const status = await resolveNewStatus(eventId);
-      const updateResult = await rsvpRepo.updateStatus(existing.id, status);
-      if (!updateResult.ok) return Err(updateResult.value);
-      return Ok({ rsvp: updateResult.value, promoted: null });
-    }
-
-    return Err(UnexpectedDependencyError("Unrecognized RSVP state."));
-  }
-
-  async function cancelRsvpAndPromoteWaitlist(
-    eventId: string,
-    actingUserId: string,
-    actingUserRole: UserRole,
-  ): Promise<Result<WaitlistPromotionResult, RsvpError>> {
-    const existingResult = await rsvpRepo.findByUserAndEvent(actingUserId, eventId);
-    if (!existingResult.ok) {
-      return Err(UnexpectedDependencyError(existingResult.value.message));
-    }
-    if (!existingResult.value) {
-      return Err(EventNotFoundError("No active RSVP found to cancel."));
-    }
-
-    const cancelResult = await rsvpRepo.updateStatus(
-      existingResult.value.id,
-      "cancelled",
-    );
-    if (!cancelResult.ok) return Err(cancelResult.value);
-
-    const waitlistResult = await rsvpRepo.findWaitlistedForEvent(eventId);
-    if (!waitlistResult.ok) {
-      return Ok({ cancelled: cancelResult.value, promoted: null });
-    }
-
-    let promoted: IRsvpToggleRecord | null = null;
-    if (waitlistResult.value.length > 0) {
-      const promoteResult = await rsvpRepo.updateStatus(
-        waitlistResult.value[0].id,
-        "confirmed",
-      );
-      if (promoteResult.ok) {
-        promoted = promoteResult.value;
+      if (isUpcoming) {
+        upcoming.push(entry);
+      } else {
+        pastOrCancelled.push(entry);
       }
     }
 
-    return Ok({ cancelled: cancelResult.value, promoted });
+    upcoming.sort((a, b) => new Date(a.event.date).getTime() - new Date(b.event.date).getTime());
+    pastOrCancelled.sort((a, b) => new Date(b.event.date).getTime() - new Date(a.event.date).getTime());
+
+    return Ok({ upcoming, pastOrCancelled });
   }
+}
 
-  async function getWaitlistPosition(
-    eventId: string,
-    actingUserId: string,
-  ): Promise<Result<number | null, WaitlistError>> {
-    const eventResult = await eventRepo.findById(eventId);
-    if (!eventResult.ok || !eventResult.value) {
-      return Err(WaitlistEventNotFoundError(`Event "${eventId}" not found.`));
-    }
-
-    const waitlistResult = await rsvpRepo.findWaitlistedForEvent(eventId);
-    if (!waitlistResult.ok) {
-      return Ok(null);
-    }
-
-    const index = waitlistResult.value.findIndex(
-      (r) => r.userId === actingUserId,
-    );
-    return Ok(index === -1 ? null : index + 1);
-  }
-
-  return { toggleRsvp, cancelRsvpAndPromoteWaitlist, getWaitlistPosition };
+export function CreateRsvpService(repo: IRsvpRepository): IRsvpService {
+  return new RsvpService(repo);
 }
