@@ -3,7 +3,11 @@ import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import Layouts from "express-ejs-layouts";
 import { IAuthController } from "./auth/AuthController";
+<<<<<<< task/rsvp-dashboard-route
+import type { IRsvpController } from "./rsvp/RsvpController";
+=======
 import { IEventController } from "./event/EventController";
+>>>>>>> dev
 import {
   AuthenticationRequired,
   AuthorizationRequired,
@@ -43,7 +47,11 @@ class ExpressApp implements IApp {
 
   constructor(
     private readonly authController: IAuthController,
+<<<<<<< task/rsvp-dashboard-route
+    private readonly rsvpController: IRsvpController,
+=======
     private readonly eventController: IEventController,
+>>>>>>> dev
     private readonly logger: ILoggingService,
   ) {
     this.app = express();
@@ -378,6 +386,26 @@ class ExpressApp implements IApp {
       }),
     );
 
+<<<<<<< task/rsvp-dashboard-route
+    // ── Member routes ────────────────────────────────────────────────
+
+    this.app.get(
+      "/my-rsvps",
+      asyncHandler(async (req, res) => {
+        if (!this.requireRole(req, res, ["user"], "This page is for members only.")) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.rsvpController.showMyRsvps(res, browserSession);
+      }),
+    );
+
+    // ── Authenticated home page ──────────────────────────────────────
+    // TODO: Replace this placeholder with your project's main page.
+
+=======
+>>>>>>> dev
     this.app.get(
       "/home",
       asyncHandler(async (req, res) => {
@@ -416,8 +444,16 @@ class ExpressApp implements IApp {
 
 export function CreateApp(
   authController: IAuthController,
+<<<<<<< task/rsvp-dashboard-route
+  rsvpController: IRsvpController,
+  logger: ILoggingService,
+): IApp {
+  return new ExpressApp(authController, rsvpController, logger);
+}
+=======
   eventController: IEventController,
   logger: ILoggingService,
 ): IApp {
   return new ExpressApp(authController, eventController, logger);
 }
+>>>>>>> dev
