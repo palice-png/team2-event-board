@@ -7,7 +7,18 @@ import type {
   IEventRepository,
 } from "./EventRepository";
 
+export type RsvpStatus = "going" | "waitlisted" | "cancelled";
+
+export interface IRsvpRecord {
+  id: string;
+  eventId: string;
+  userId: string;
+  status: RsvpStatus;
+  createdAt: string;
+}
+
 const eventStore = new Map<string, IEventRecord>();
+const rsvpStore: IRsvpRecord[] = [];
 
 function UnexpectedDependencyError(message: string): EventRepositoryError {
   return {
@@ -58,6 +69,40 @@ class InMemoryEventRepository implements IEventRepository {
       return Ok([...eventStore.values()]);
     } catch {
       return Err(UnexpectedDependencyError("Unable to list events."));
+    }
+  }
+
+  async listByOrganizerId(
+    organizerId: string,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      const events = [...eventStore.values()].filter(
+        (event) => event.organizerId === organizerId,
+      );
+      return Ok(events);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to read organizer events."));
+    }
+  }
+
+  async listAll(): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      return Ok([...eventStore.values()]);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to list all events."));
+    }
+  }
+
+  async countGoingByEventId(
+    eventId: string,
+  ): Promise<Result<number, EventRepositoryError>> {
+    try {
+      const count = rsvpStore.filter(
+        (rsvp) => rsvp.eventId === eventId && rsvp.status === "going",
+      ).length;
+      return Ok(count);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to read attendee counts."));
     }
   }
 
