@@ -3,11 +3,9 @@ import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import Layouts from "express-ejs-layouts";
 import { IAuthController } from "./auth/AuthController";
-<<<<<<< task/rsvp-dashboard-route
 import type { IRsvpController } from "./rsvp/RsvpController";
-=======
 import { IEventController } from "./event/EventController";
->>>>>>> dev
+import type { ICommentController } from "./comments/CommentController";
 import {
   AuthenticationRequired,
   AuthorizationRequired,
@@ -47,11 +45,10 @@ class ExpressApp implements IApp {
 
   constructor(
     private readonly authController: IAuthController,
-<<<<<<< task/rsvp-dashboard-route
+
     private readonly rsvpController: IRsvpController,
-=======
     private readonly eventController: IEventController,
->>>>>>> dev
+    private readonly commentController: ICommentController,
     private readonly logger: ILoggingService,
   ) {
     this.app = express();
@@ -352,6 +349,39 @@ class ExpressApp implements IApp {
       }),
     );
 
+    this.app.post(
+      "/events/:id/comments",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) {
+          return;
+        }
+
+        const browserSession = touchAppSession(sessionStore(req));
+        await this.commentController.postComment(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          typeof req.body.content === "string" ? req.body.content : "",
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
+
+    this.app.post(
+      "/comments/:id/delete",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) {
+          return;
+        }
+
+        await this.commentController.deleteComment(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          sessionStore(req),
+        );
+      }),
+    );
+
     this.app.get(
       "/organizer/dashboard",
       asyncHandler(async (req, res) => {
@@ -442,7 +472,6 @@ class ExpressApp implements IApp {
       }),
     );
 
-<<<<<<< task/rsvp-dashboard-route
     // ── Member routes ────────────────────────────────────────────────
 
     this.app.get(
@@ -460,8 +489,6 @@ class ExpressApp implements IApp {
     // ── Authenticated home page ──────────────────────────────────────
     // TODO: Replace this placeholder with your project's main page.
 
-=======
->>>>>>> dev
     this.app.get(
       "/home",
       asyncHandler(async (req, res) => {
@@ -500,16 +527,10 @@ class ExpressApp implements IApp {
 
 export function CreateApp(
   authController: IAuthController,
-<<<<<<< task/rsvp-dashboard-route
   rsvpController: IRsvpController,
-  logger: ILoggingService,
-): IApp {
-  return new ExpressApp(authController, rsvpController, logger);
-}
-=======
   eventController: IEventController,
+  commentController: ICommentController,
   logger: ILoggingService,
 ): IApp {
-  return new ExpressApp(authController, eventController, logger);
+  return new ExpressApp(authController, rsvpController, eventController, commentController, logger);
 }
->>>>>>> dev
