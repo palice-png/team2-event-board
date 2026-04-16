@@ -45,6 +45,13 @@ export type CancelEventError =
   | InvalidEventStateError
   | UnexpectedDependencyError;
 
+  export type UpdateEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | InvalidEventStateError
+  | ValidationError
+  | UnexpectedDependencyError;
+
 export const ValidationError = (message: string): ValidationError => ({
   name: "ValidationError",
   message,

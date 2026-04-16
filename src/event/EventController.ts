@@ -9,6 +9,7 @@ import type {
   DashboardError,
   EventDetailView,
   ICreateEventInput,
+  IUpdateEventInput,
   IEventService,
 } from "./EventService";
 import type {
@@ -16,7 +17,9 @@ import type {
   CreateEventError,
   GetEventError,
   PublishEventError,
+  UpdateEventError,
 } from "./errors";
+
 
 export interface IEventController {
   showCreateForm(
@@ -48,6 +51,20 @@ export interface IEventController {
   showEventDetail(
     res: Response,
     eventId: string,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
+  showEditForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
+
+  updateFromForm(
+    res: Response,
+    eventId: string,
+    eventInput: IUpdateEventInput,
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
@@ -341,6 +358,79 @@ class EventController implements IEventController {
 
     this.logger.info(`Cancelled event ${result.value.id}`);
     res.status(200).send("Event cancelled.");
+  }
+  async showEditForm(
+    res: Response,
+    eventId: string,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    const result = await this.service.getEventById(
+      eventId,
+      currentUser.userId,
+      currentUser.role,
+    );
+
+    if (result.ok === false) {
+      const status = this.mapErrorStatus(result.value as GetEventError);
+      this.renderError(res, status, result.value.message);
+      return;
+    }
+
+    res.render("events/edit", {
+      session,
+      errorMessage: null,
+      event: result.value.event,
+    });
+  }
+
+  async updateFromForm(
+    res: Response,
+    eventId: string,
+    eventInput: IUpdateEventInput,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    const result = await this.service.updateEvent(
+      eventId,
+      eventInput,
+      currentUser.userId,
+      currentUser.role,
+    );
+
+    if (result.ok === false) {
+      const status = this.mapErrorStatus(result.value as UpdateEventError);
+      const log = status >= 500 ? this.logger.error : this.logger.warn;
+      log.call(this.logger, `Update event failed: ${result.value.message}`);
+
+      res.status(status).render("events/edit", {
+        session,
+        errorMessage: result.value.message,
+        event: { id: eventId, ...eventInput },
+      });
+      return;
+    }
+
+    this.logger.info(`Updated event ${result.value.id}`);
+    res.redirect(`/events/${result.value.id}`);
   }
 }
 

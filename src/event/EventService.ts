@@ -12,9 +12,20 @@ import {
   type CreateEventError,
   type GetEventError,
   type PublishEventError,
+  type UpdateEventError,
 } from "./errors";
 
 export interface ICreateEventInput {
+  title: string;
+  description: string;
+  location: string;
+  category: string;
+  capacity: string;
+  startDatetime: string;
+  endDatetime: string;
+}
+
+export interface IUpdateEventInput {
   title: string;
   description: string;
   location: string;
@@ -73,6 +84,13 @@ export interface IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, CancelEventError>>;
+
+  updateEvent(
+    eventId: string,
+    eventInput: IUpdateEventInput,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<IEventRecord, UpdateEventError>>;
 }
 
 class EventService implements IEventService {
@@ -339,6 +357,74 @@ class EventService implements IEventService {
     }
 
     return Ok(updatedResult.value);
+  }
+
+  async updateEvent(
+    eventId: string,
+    eventInput: IUpdateEventInput,
+    actingUserId: string,
+    actingUserRole: UserRole,
+  ): Promise<Result<IEventRecord, UpdateEventError>> {
+    const eventResult = await this.events.findById(eventId);
+    if (eventResult.ok === false) {
+      return Err(UnexpectedDependencyError(eventResult.value.message));
+    }
+
+    const event = eventResult.value;
+    if (!event) {
+      return Err(EventNotFoundError("Event not found."));
+    }
+
+    const isOwner = event.organizerId === actingUserId;
+    const isAdmin = actingUserRole === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return Err(UnauthorizedError("You are not authorized to edit this event."));
+    }
+
+    if (event.status === "cancelled") {
+      return Err(InvalidEventStateError("Cannot edit a cancelled event."));
+    }
+
+    const titleResult = this.normalizeRequiredText(eventInput.title, "Title");
+    if (titleResult.ok === false) return Err(titleResult.value);
+
+    const descriptionResult = this.normalizeRequiredText(eventInput.description, "Description");
+    if (descriptionResult.ok === false) return Err(descriptionResult.value);
+
+    const locationResult = this.normalizeRequiredText(eventInput.location, "Location");
+    if (locationResult.ok === false) return Err(locationResult.value);
+
+    const categoryResult = this.normalizeRequiredText(eventInput.category, "Category");
+    if (categoryResult.ok === false) return Err(categoryResult.value);
+
+    const datesResult = this.parseAndValidateDates(
+      eventInput.startDatetime,
+      eventInput.endDatetime,
+    );
+    if (datesResult.ok === false) return Err(datesResult.value);
+
+    const capacityResult = this.parseAndValidateCapacity(eventInput.capacity);
+    if (capacityResult.ok === false) return Err(capacityResult.value);
+
+    const updated: IEventRecord = {
+      ...event,
+      title: titleResult.value,
+      description: descriptionResult.value,
+      location: locationResult.value,
+      category: categoryResult.value,
+      capacity: capacityResult.value,
+      startDatetime: datesResult.value.startDatetime,
+      endDatetime: datesResult.value.endDatetime,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const savedResult = await this.events.update(updated);
+    if (savedResult.ok === false) {
+      return Err(UnexpectedDependencyError(savedResult.value.message));
+    }
+
+    return Ok(savedResult.value);
   }
 
   private canCreateEvents(role: UserRole): boolean {
