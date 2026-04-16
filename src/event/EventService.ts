@@ -185,10 +185,12 @@ class EventService implements IEventService {
       );
     }
 
-    return Ok({
+    const detailView: EventDetailView = {
       event,
       attendeeCount: attendeeCountResult.value,
-    });
+    };
+
+    return Ok(detailView);
   }
 
   async getOrganizerDashboard(
