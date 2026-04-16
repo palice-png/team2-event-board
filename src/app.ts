@@ -3,6 +3,7 @@ import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import Layouts from "express-ejs-layouts";
 import { IAuthController } from "./auth/AuthController";
+import type { IRsvpController } from "./rsvp/RsvpController";
 import {
   AuthenticationRequired,
   AuthorizationRequired,
@@ -35,6 +36,7 @@ class ExpressApp implements IApp {
 
   constructor(
     private readonly authController: IAuthController,
+    private readonly rsvpController: IRsvpController,
     private readonly logger: ILoggingService,
   ) {
     this.app = express();
@@ -237,6 +239,20 @@ class ExpressApp implements IApp {
       }),
     );
 
+    // ── Member routes ────────────────────────────────────────────────
+
+    this.app.get(
+      "/my-rsvps",
+      asyncHandler(async (req, res) => {
+        if (!this.requireRole(req, res, ["user"], "This page is for members only.")) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.rsvpController.showMyRsvps(res, browserSession);
+      }),
+    );
+
     // ── Authenticated home page ──────────────────────────────────────
     // TODO: Replace this placeholder with your project's main page.
 
@@ -272,7 +288,8 @@ class ExpressApp implements IApp {
 
 export function CreateApp(
   authController: IAuthController,
+  rsvpController: IRsvpController,
   logger: ILoggingService,
 ): IApp {
-  return new ExpressApp(authController, logger);
+  return new ExpressApp(authController, rsvpController, logger);
 }
