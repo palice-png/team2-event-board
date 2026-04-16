@@ -1,0 +1,95 @@
+<% const values = formData ?? {}; %>
+
+<div>
+  <h1>Create Event</h1>
+  <p>Newly created events start as drafts.</p>
+
+  <% if (errorMessage) { %>
+    <div>
+      <strong>Unable to create event</strong>
+      <p><%= errorMessage %></p>
+    </div>
+  <% } %>
+
+  <form action="/events" method="post">
+    <div>
+      <label for="title">Title</label>
+      <input
+        id="title"
+        name="title"
+        type="text"
+        value="<%= values.title ?? '' %>"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        name="description"
+        rows="5"
+        required
+      ><%= values.description ?? '' %></textarea>
+    </div>
+
+    <div>
+      <label for="location">Location</label>
+      <input
+        id="location"
+        name="location"
+        type="text"
+        value="<%= values.location ?? '' %>"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="category">Category</label>
+      <input
+        id="category"
+        name="category"
+        type="text"
+        value="<%= values.category ?? '' %>"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="capacity">Capacity</label>
+      <input
+        id="capacity"
+        name="capacity"
+        type="number"
+        min="1"
+        step="1"
+        value="<%= values.capacity ?? '' %>"
+      />
+      <p>Leave blank if the event has no attendance limit.</p>
+    </div>
+
+    <div>
+      <label for="startDatetime">Start date and time</label>
+      <input
+        id="startDatetime"
+        name="startDatetime"
+        type="datetime-local"
+        value="<%= values.startDatetime ?? '' %>"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="endDatetime">End date and time</label>
+      <input
+        id="endDatetime"
+        name="endDatetime"
+        type="datetime-local"
+        value="<%= values.endDatetime ?? '' %>"
+        required
+      />
+    </div>
+
+    <button type="submit">Create Event</button>
+  </form>
+</div>
