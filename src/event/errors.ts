@@ -18,6 +18,11 @@ export type EventNotFoundError = {
   message: string;
 };
 
+export type InvalidEventStateError = {
+  name: "InvalidEventStateError";
+  message: string;
+};
+
 export type CreateEventError =
   | ValidationError
   | UnauthorizedError
@@ -26,6 +31,18 @@ export type CreateEventError =
 export type GetEventError =
   | EventNotFoundError
   | UnauthorizedError
+  | UnexpectedDependencyError;
+
+export type PublishEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | InvalidEventStateError
+  | UnexpectedDependencyError;
+
+export type CancelEventError =
+  | EventNotFoundError
+  | UnauthorizedError
+  | InvalidEventStateError
   | UnexpectedDependencyError;
 
 export const ValidationError = (message: string): ValidationError => ({
@@ -47,5 +64,12 @@ export const UnexpectedDependencyError = (
 
 export const EventNotFoundError = (message: string): EventNotFoundError => ({
   name: "EventNotFoundError",
+  message,
+});
+
+export const InvalidEventStateError = (
+  message: string,
+): InvalidEventStateError => ({
+  name: "InvalidEventStateError",
   message,
 });
