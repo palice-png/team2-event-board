@@ -46,4 +46,9 @@ export interface IEventRepository {
     status: EventStatus,
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
+
+  update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>>;
+
 }

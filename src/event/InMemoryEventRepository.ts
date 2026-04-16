@@ -105,6 +105,10 @@ export interface IEventRepository {
     status: EventStatus,
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
+
+  update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>>;
 }
 
 class InMemoryEventRepository implements IEventRepository {
@@ -212,7 +216,18 @@ class InMemoryEventRepository implements IEventRepository {
       return Err(UnexpectedDependencyError("Unable to update event status."));
     }
   }
+  async update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>> {
+    try {
+      eventStore.set(event.id, event);
+      return Ok(event);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to update event."));
+    }
+  }
 }
+
 
 export function CreateInMemoryEventRepository(): IEventRepository {
   return new InMemoryEventRepository();

@@ -220,6 +220,62 @@ class ExpressApp implements IApp {
         );
       }),
     );
+    this.app.get(
+      "/events/:id/edit",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can edit events.",
+          )
+        ) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.eventController.showEditForm(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
+
+    this.app.post(
+      "/events/:id/edit",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can edit events.",
+          )
+        ) {
+          return;
+        }
+
+        const browserSession = touchAppSession(sessionStore(req));
+        await this.eventController.updateFromForm(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          {
+            title: typeof req.body.title === "string" ? req.body.title : "",
+            description: typeof req.body.description === "string" ? req.body.description : "",
+            location: typeof req.body.location === "string" ? req.body.location : "",
+            category: typeof req.body.category === "string" ? req.body.category : "",
+            capacity: typeof req.body.capacity === "string" ? req.body.capacity : "",
+            startDatetime: typeof req.body.startDatetime === "string" ? req.body.startDatetime : "",
+            endDatetime: typeof req.body.endDatetime === "string" ? req.body.endDatetime : "",
+          },
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
 
     this.app.post(
       "/events",
