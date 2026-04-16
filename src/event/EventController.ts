@@ -51,8 +51,10 @@ class EventController implements IEventController {
     );
 
     if (result.ok === false) {
-      res.status(400).render("events/new", {
-        formData: {},
+      const status = result.value.name === "UnauthorizedError" ? 403 : 400;
+
+      res.status(status).render("events/new", {
+        formData: input,
         errorMessage: result.value.message,
       });
       return;
