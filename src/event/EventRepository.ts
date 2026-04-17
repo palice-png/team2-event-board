@@ -57,4 +57,8 @@ export interface IEventRepository {
   transitionExpiredToStatus(
     now: string,
   ): Promise<Result<number, EventRepositoryError>>;
+  update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>>;
+
 }

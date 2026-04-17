@@ -3,7 +3,9 @@ import express, { Request, RequestHandler, Response } from "express";
 import session from "express-session";
 import Layouts from "express-ejs-layouts";
 import { IAuthController } from "./auth/AuthController";
+import type { IRsvpController } from "./rsvp/RsvpController";
 import { IEventController } from "./event/EventController";
+import type { ICommentController } from "./comments/CommentController";
 import {
   AuthenticationRequired,
   AuthorizationRequired,
@@ -43,7 +45,10 @@ class ExpressApp implements IApp {
 
   constructor(
     private readonly authController: IAuthController,
+
+    private readonly rsvpController: IRsvpController,
     private readonly eventController: IEventController,
+    private readonly commentController: ICommentController,
     private readonly logger: ILoggingService,
   ) {
     this.app = express();
@@ -212,6 +217,62 @@ class ExpressApp implements IApp {
         );
       }),
     );
+    this.app.get(
+      "/events/:id/edit",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can edit events.",
+          )
+        ) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.eventController.showEditForm(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
+
+    this.app.post(
+      "/events/:id/edit",
+      asyncHandler(async (req, res) => {
+        if (
+          !this.requireRole(
+            req,
+            res,
+            ["admin", "staff"],
+            "Only organizers and admins can edit events.",
+          )
+        ) {
+          return;
+        }
+
+        const browserSession = touchAppSession(sessionStore(req));
+        await this.eventController.updateFromForm(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          {
+            title: typeof req.body.title === "string" ? req.body.title : "",
+            description: typeof req.body.description === "string" ? req.body.description : "",
+            location: typeof req.body.location === "string" ? req.body.location : "",
+            category: typeof req.body.category === "string" ? req.body.category : "",
+            capacity: typeof req.body.capacity === "string" ? req.body.capacity : "",
+            startDatetime: typeof req.body.startDatetime === "string" ? req.body.startDatetime : "",
+            endDatetime: typeof req.body.endDatetime === "string" ? req.body.endDatetime : "",
+          },
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
 
     this.app.post(
       "/events",
@@ -281,6 +342,39 @@ class ExpressApp implements IApp {
         }
 
         await this.eventController.cancelFromForm(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          sessionStore(req),
+        );
+      }),
+    );
+
+    this.app.post(
+      "/events/:id/comments",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) {
+          return;
+        }
+
+        const browserSession = touchAppSession(sessionStore(req));
+        await this.commentController.postComment(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          typeof req.body.content === "string" ? req.body.content : "",
+          sessionStore(req),
+          browserSession,
+        );
+      }),
+    );
+
+    this.app.post(
+      "/comments/:id/delete",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) {
+          return;
+        }
+
+        await this.commentController.deleteComment(
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           sessionStore(req),
@@ -378,6 +472,23 @@ class ExpressApp implements IApp {
       }),
     );
 
+    // ── Member routes ────────────────────────────────────────────────
+
+    this.app.get(
+      "/my-rsvps",
+      asyncHandler(async (req, res) => {
+        if (!this.requireRole(req, res, ["user"], "This page is for members only.")) {
+          return;
+        }
+
+        const browserSession = recordPageView(sessionStore(req));
+        await this.rsvpController.showMyRsvps(res, browserSession);
+      }),
+    );
+
+    // ── Authenticated home page ──────────────────────────────────────
+    // TODO: Replace this placeholder with your project's main page.
+
     this.app.get(
       "/home",
       asyncHandler(async (req, res) => {
@@ -416,8 +527,10 @@ class ExpressApp implements IApp {
 
 export function CreateApp(
   authController: IAuthController,
+  rsvpController: IRsvpController,
   eventController: IEventController,
+  commentController: ICommentController,
   logger: ILoggingService,
 ): IApp {
-  return new ExpressApp(authController, eventController, logger);
+  return new ExpressApp(authController, rsvpController, eventController, commentController, logger);
 }

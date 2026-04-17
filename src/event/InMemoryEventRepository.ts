@@ -115,6 +115,9 @@ export interface IEventRepository {
   transitionExpiredToStatus(
     now: Date,
   ): Promise<Result<number, EventRepositoryError>>;
+  update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>>;
 }
 
 class InMemoryEventRepository implements IEventRepository {
@@ -259,9 +262,18 @@ class InMemoryEventRepository implements IEventRepository {
       return Err(
         UnexpectedDependencyError("Unable to transition expired events."),
       );
+  async update(
+    event: IEventRecord,
+  ): Promise<Result<IEventRecord, EventRepositoryError>> {
+    try {
+      eventStore.set(event.id, event);
+      return Ok(event);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to update event."));
     }
   }
 }
+
 
 export function CreateInMemoryEventRepository(): IEventRepository {
   return new InMemoryEventRepository();
