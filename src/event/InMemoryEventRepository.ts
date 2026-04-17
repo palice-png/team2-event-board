@@ -78,7 +78,7 @@ function UnexpectedDependencyError(message: string): EventRepositoryError {
     message,
   };
 }
-
+//this should be imported from EventRepository? It's identical...
 export interface IEventRepository {
   createEvent(
     input: ICreateEventRecordInput,
@@ -105,6 +105,16 @@ export interface IEventRepository {
     status: EventStatus,
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
+
+  listByStatus(
+    status: EventStatus,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
+
+  // Transitions all non-terminal events whose endDatetime < now to "past".
+  // Returns the count of records updated.
+  transitionExpiredToStatus(
+    now: string,
+  ): Promise<Result<number, EventRepositoryError>>;
 }
 
 class InMemoryEventRepository implements IEventRepository {
@@ -210,6 +220,19 @@ class InMemoryEventRepository implements IEventRepository {
       return Ok(updated);
     } catch {
       return Err(UnexpectedDependencyError("Unable to update event status."));
+    }
+  }
+
+  async listByStatus(
+    status: EventStatus,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      const events = [...eventStore.values()].filter(
+        (event) => event.status === status,
+      );
+      return Ok(events);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to list events by status."));
     }
   }
 }
