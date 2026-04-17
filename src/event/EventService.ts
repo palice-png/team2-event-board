@@ -13,6 +13,8 @@ import {
   type GetEventError,
   type PublishEventError,
   type UpdateEventError,
+  type ArchiveError,
+  InvalidFilterError,
 } from "./errors";
 
 export interface ICreateEventInput {
@@ -91,6 +93,14 @@ export interface IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, UpdateEventError>>;
+
+  transitionExpiredEvents(
+    now: Date
+  ): Promise<Result<number, ArchiveError>>;
+
+  getArchivedEvents(
+    category: string | null
+  ): Promise<Result<IEventSummary[], ArchiveError | InvalidFilterError>>;
 }
 
 class EventService implements IEventService {
@@ -515,6 +525,45 @@ class EventService implements IEventService {
     }
 
     return Ok(parsedCapacity);
+  }
+
+  async transitionExpiredEvents(
+    now: Date
+  ): Promise<Result<number, ArchiveError>> {
+    const result = await this.events.transitionExpiredToStatus(now);
+    if (result.ok === false) {
+      return Err(UnexpectedDependencyError(result.value.message));
+    }
+    return Ok(result.value);
+  }
+
+  async getArchivedEvents(
+    category: string | null
+  ): Promise<Result<IEventSummary[], ArchiveError | InvalidFilterError>> {
+    if (category === '') {
+      return Err(InvalidFilterError('Category filter cannot be empty.'));
+    }
+ 
+    const result = await this.events.listByStatus('past');
+    if (result.ok === false) {
+      return Err(UnexpectedDependencyError(result.value.message));
+    }
+ 
+    let events = result.value;
+ 
+    if (category !== null) {
+      events = events.filter(
+        (event) => event.category.toLowerCase() === category.toLowerCase(),
+      );
+    }
+ 
+    events.sort(
+      (a, b) =>
+        new Date(b.startDatetime).getTime() -
+        new Date(a.startDatetime).getTime(),
+    );
+ 
+    return Ok(events.map(toEventSummary));
   }
 }
 
