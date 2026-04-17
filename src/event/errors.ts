@@ -73,3 +73,16 @@ export const InvalidEventStateError = (
   name: "InvalidEventStateError",
   message,
 });
+
+export type InvalidFilterError = {
+  name: "InvalidFilterError";
+  message: string;
+};
+
+export const InvalidFilterError = (message: string): InvalidFilterError => ({
+  name: "InvalidFilterError",
+  message,
+});
+
+// ArchiveError reuses UnexpectedDependencyError — no new type needed
+export type ArchiveError = UnexpectedDependencyError;

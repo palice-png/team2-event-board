@@ -46,4 +46,15 @@ export interface IEventRepository {
     status: EventStatus,
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
+
+  // Returns all events with the given status
+  listByStatus(
+    status: EventStatus,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
+
+  // Transitions all non-terminal events whose endDatetime < now to "past".
+  // Returns the count of records updated.
+  transitionExpiredToStatus(
+    now: string,
+  ): Promise<Result<number, EventRepositoryError>>;
 }
