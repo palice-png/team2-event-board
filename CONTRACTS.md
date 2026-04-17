@@ -73,7 +73,7 @@
 ---
 
 ## Feature 8 — Organizer Event Dashboard
-
+/
 ### EventService.getOrganizerDashboard
 - Owner: Jigeon
 - Signature: `getOrganizerDashboard(actingUserId, actingUserRole): Result<OrganizerDashboardView, DashboardError>`

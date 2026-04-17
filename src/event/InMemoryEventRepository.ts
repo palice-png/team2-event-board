@@ -78,7 +78,7 @@ function UnexpectedDependencyError(message: string): EventRepositoryError {
     message,
   };
 }
-
+//this should be imported from EventRepository? It's identical...
 export interface IEventRepository {
   createEvent(
     input: ICreateEventRecordInput,
@@ -106,6 +106,15 @@ export interface IEventRepository {
     updatedAt: string,
   ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
 
+  listByStatus(
+    status: EventStatus,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
+
+  // Transitions all non-terminal events whose endDatetime < now to "past".
+  // Returns the count of records updated.
+  transitionExpiredToStatus(
+    now: Date,
+  ): Promise<Result<number, EventRepositoryError>>;
   update(
     event: IEventRecord,
   ): Promise<Result<IEventRecord, EventRepositoryError>>;
@@ -216,6 +225,43 @@ class InMemoryEventRepository implements IEventRepository {
       return Err(UnexpectedDependencyError("Unable to update event status."));
     }
   }
+
+  async listByStatus(
+    status: EventStatus,
+  ): Promise<Result<IEventRecord[], EventRepositoryError>> {
+    try {
+      const events = [...eventStore.values()].filter(
+        (event) => event.status === status,
+      );
+      return Ok(events);
+    } catch {
+      return Err(UnexpectedDependencyError("Unable to list events by status."));
+    }
+  }
+
+  async transitionExpiredToStatus(
+    now: Date,
+  ): Promise<Result<number, EventRepositoryError>> {
+    try {
+      let count = 0;
+      const updatedAt = now.toISOString();
+ 
+      for (const [id, event] of eventStore) {
+        if (
+          event.status !== "cancelled" &&
+          event.status !== "past" &&
+          new Date(event.endDatetime) < now
+        ) {
+          eventStore.set(id, { ...event, status: "past", updatedAt });
+          count++;
+        }
+      }
+ 
+      return Ok(count);
+    } catch {
+      return Err(
+        UnexpectedDependencyError("Unable to transition expired events."),
+      );
   async update(
     event: IEventRecord,
   ): Promise<Result<IEventRecord, EventRepositoryError>> {
