@@ -113,7 +113,7 @@ export interface IEventRepository {
   // Transitions all non-terminal events whose endDatetime < now to "past".
   // Returns the count of records updated.
   transitionExpiredToStatus(
-    now: string,
+    now: Date,
   ): Promise<Result<number, EventRepositoryError>>;
 }
 
@@ -233,6 +233,32 @@ class InMemoryEventRepository implements IEventRepository {
       return Ok(events);
     } catch {
       return Err(UnexpectedDependencyError("Unable to list events by status."));
+    }
+  }
+
+  async transitionExpiredToStatus(
+    now: Date,
+  ): Promise<Result<number, EventRepositoryError>> {
+    try {
+      let count = 0;
+      const updatedAt = now.toISOString();
+ 
+      for (const [id, event] of eventStore) {
+        if (
+          event.status !== "cancelled" &&
+          event.status !== "past" &&
+          new Date(event.endDatetime) < now
+        ) {
+          eventStore.set(id, { ...event, status: "past", updatedAt });
+          count++;
+        }
+      }
+ 
+      return Ok(count);
+    } catch {
+      return Err(
+        UnexpectedDependencyError("Unable to transition expired events."),
+      );
     }
   }
 }
