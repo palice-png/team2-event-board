@@ -13,6 +13,8 @@ import {
   type GetEventError,
   type PublishEventError,
   type UpdateEventError,
+  type ArchiveError,
+  type InvalidFilterError,
 } from "./errors";
 
 export interface ICreateEventInput {
@@ -91,6 +93,14 @@ export interface IEventService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, UpdateEventError>>;
+
+  transitionExpiredEvents(
+    now: Date
+  ): Promise<Result<number, ArchiveError>>;
+
+  getArchivedEvents(
+    category: string | null
+  ): Promise<Result<IEventSummary[], ArchiveError | InvalidFilterError>>;
 }
 
 class EventService implements IEventService {
