@@ -14,7 +14,7 @@ import {
   type PublishEventError,
   type UpdateEventError,
   type ArchiveError,
-  type InvalidFilterError,
+  InvalidFilterError,
 } from "./errors";
 
 export interface ICreateEventInput {
@@ -525,6 +525,45 @@ class EventService implements IEventService {
     }
 
     return Ok(parsedCapacity);
+  }
+
+  async transitionExpiredEvents(
+    now: Date
+  ): Promise<Result<number, ArchiveError>> {
+    const result = await this.events.transitionExpiredToStatus(now);
+    if (result.ok === false) {
+      return Err(UnexpectedDependencyError(result.value.message));
+    }
+    return Ok(result.value);
+  }
+
+  async getArchivedEvents(
+    category: string | null
+  ): Promise<Result<IEventSummary[], ArchiveError | InvalidFilterError>> {
+    if (category === '') {
+      return Err(InvalidFilterError('Category filter cannot be empty.'));
+    }
+ 
+    const result = await this.events.listByStatus('past');
+    if (result.ok === false) {
+      return Err(UnexpectedDependencyError(result.value.message));
+    }
+ 
+    let events = result.value;
+ 
+    if (category !== null) {
+      events = events.filter(
+        (event) => event.category.toLowerCase() === category.toLowerCase(),
+      );
+    }
+ 
+    events.sort(
+      (a, b) =>
+        new Date(b.startDatetime).getTime() -
+        new Date(a.startDatetime).getTime(),
+    );
+ 
+    return Ok(events.map(toEventSummary));
   }
 }
 
