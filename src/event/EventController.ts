@@ -68,6 +68,13 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
+  showArchivePage(
+    res: Response,
+    category: string | null,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
 }
 
 class EventController implements IEventController {
