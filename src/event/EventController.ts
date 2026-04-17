@@ -68,6 +68,13 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
+  showArchivePage(
+    res: Response,
+    category: string | null,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
 }
 
 class EventController implements IEventController {
@@ -431,6 +438,53 @@ class EventController implements IEventController {
 
     this.logger.info(`Updated event ${result.value.id}`);
     res.redirect(`/events/${result.value.id}`);
+  }
+
+  async showArchivePage(
+    res: Response,
+    category: string | null,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const currentUser = getAuthenticatedUser(store);
+    if (!currentUser) {
+      res.status(401).render('partials/error', {
+        message: 'Please log in to continue.',
+        layout: false,
+      });
+      return;
+    }
+ 
+    // Transition expired events on every load — non-fatal if it fails
+    const transitionResult = await this.service.transitionExpiredEvents(new Date());
+    if (transitionResult.ok === false) {
+      this.logger.error(
+        `Archive: transition expired events failed: ${transitionResult.value.message}`,
+      );
+    }
+ 
+    const result = await this.service.getArchivedEvents(category);
+ 
+    if (result.ok === false) {
+      const status = result.value.name === 'InvalidFilterError' ? 400 : 500;
+      const log = status >= 500 ? this.logger.error : this.logger.warn;
+      log.call(this.logger, `Load archive failed: ${result.value.message}`);
+ 
+      res.status(status).render('events/archive', {
+        session,
+        events: [],
+        category,
+        pageError: result.value.message,
+      });
+      return;
+    }
+ 
+    res.render('events/archive', {
+      session,
+      events: result.value,
+      category,
+      pageError: null,
+    });
   }
 }
 
