@@ -1,10 +1,7 @@
 import { Err, Ok, type Result } from "../lib/result";
 import type { EventStatus, IEventRecord } from "./Event";
+import type { IEventRepository, ICreateEventRecordInput, EventRepositoryError } from "./EventRepository";
 
-export type EventRepositoryError = {
-  name: "UnexpectedDependencyError";
-  message: string;
-};
 export const DEMO_EVENTS: IEventRecord[] = [
   {
     id: "event-1",
@@ -55,19 +52,6 @@ export const DEMO_RSVPS: IRsvpRecord[] = [
   },
 ];
 
-export interface ICreateEventRecordInput {
-  title: string;
-  description: string;
-  location: string;
-  category: string;
-  status: EventStatus;
-  capacity: number | null;
-  startDatetime: string;
-  endDatetime: string;
-  organizerId: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const eventStore = new Map<string, IEventRecord>();
 const rsvpStore: IRsvpRecord[] = [];
@@ -77,47 +61,6 @@ function UnexpectedDependencyError(message: string): EventRepositoryError {
     name: "UnexpectedDependencyError",
     message,
   };
-}
-//this should be imported from EventRepository? It's identical...
-export interface IEventRepository {
-  createEvent(
-    input: ICreateEventRecordInput,
-  ): Promise<Result<IEventRecord, EventRepositoryError>>;
-
-  findById(
-    eventId: string,
-  ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
-
-  listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>>;
-
-  listByOrganizerId(
-    organizerId: string,
-  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
-
-  listAll(): Promise<Result<IEventRecord[], EventRepositoryError>>;
-
-  countGoingByEventId(
-    eventId: string,
-  ): Promise<Result<number, EventRepositoryError>>;
-
-  updateStatus(
-    eventId: string,
-    status: EventStatus,
-    updatedAt: string,
-  ): Promise<Result<IEventRecord | null, EventRepositoryError>>;
-
-  listByStatus(
-    status: EventStatus,
-  ): Promise<Result<IEventRecord[], EventRepositoryError>>;
-
-  // Transitions all non-terminal events whose endDatetime < now to "past".
-  // Returns the count of records updated.
-  transitionExpiredToStatus(
-    now: Date,
-  ): Promise<Result<number, EventRepositoryError>>;
-  update(
-    event: IEventRecord,
-  ): Promise<Result<IEventRecord, EventRepositoryError>>;
 }
 
 class InMemoryEventRepository implements IEventRepository {
@@ -262,6 +205,8 @@ class InMemoryEventRepository implements IEventRepository {
       return Err(
         UnexpectedDependencyError("Unable to transition expired events."),
       );
+    }
+  }
   async update(
     event: IEventRecord,
   ): Promise<Result<IEventRecord, EventRepositoryError>> {
