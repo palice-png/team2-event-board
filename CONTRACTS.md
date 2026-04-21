@@ -24,16 +24,12 @@
 
 ### EventService.updateEvent
 - Owner: Josie
-- Signature: `updateEvent(eventId, eventInput, actingUserId, actingUserRole): Result<EventSummary, UpdateEventError>`
-- Success: returns updated event
-- Errors: `EventNotFoundError`, `UnauthorizedError`, `InvalidEventStateError`, `ValidationError`
+- Signature: `updateEvent(eventId, eventInput, actingUserId, actingUserRole): Result<IEventRecord, UpdateEventError>`
+- Success: returns IEventRecord
+- Errors: `EventNotFoundError`, `UnauthorizedError`, `InvalidEventStateError`, `ValidationError`, `UnexpectedDependencyError`
 
-### EventService.validateEventInput
-- Owner: Josie
-- Signature: `validateEventInput(eventInput): Result<EventInput, ValidationError>`
-- Success: returns validated event input
-- Errors: `ValidationError`
-
+###Note
+`validateEventInput` was removed from the public interface. Validation is handled internally inside `updateEvent` using private helper methods. No external callers depend on this method.
 ---
 
 ## Feature 4 — RSVP Toggle
