@@ -55,7 +55,7 @@ export interface IEventRepository {
   // Transitions all non-terminal events whose endDatetime < now to "past".
   // Returns the count of records updated.
   transitionExpiredToStatus(
-    now: string,
+    now: Date,
   ): Promise<Result<number, EventRepositoryError>>;
   update(
     event: IEventRecord,
