@@ -2,7 +2,6 @@ import type { Response } from "express";
 import type { IAppBrowserSession } from "../session/AppSession";
 import type { ILoggingService } from "../service/LoggingService";
 import type { IRsvpService } from "./RsvpService";
-import type { MyRsvpsError } from "./Rsvp";
 
 export interface IRsvpController {
   showMyRsvps(res: Response, session: IAppBrowserSession): Promise<void>;
@@ -26,8 +25,8 @@ class RsvpController implements IRsvpController {
     const { userId, role } = session.authenticatedUser;
     const result = await this.rsvpService.getMyRsvps(userId, role);
 
-    if (!result.ok) {
-      const error = result.value as MyRsvpsError;
+    if (result.ok === false) {
+      const error = result.value;
       this.logger.warn(`getMyRsvps failed: ${error.message}`);
       const status = error.name === "UnauthorizedError" ? 403 : 500;
       res.status(status).render("partials/error", {
