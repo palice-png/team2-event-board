@@ -42,11 +42,13 @@ export interface IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
   cancelFromForm(
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
   showEventDetail(
     res: Response,
@@ -301,6 +303,7 @@ class EventController implements IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -329,6 +332,14 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Published event ${result.value.id}`);
+    if (options?.isHtmx && options.viewSource === "detail") {
+      res.render("events/partials/detail-status-actions", {
+        layout: false,
+        event: result.value,
+        actingUser: currentUser,
+      });
+      return;
+    }
     res.status(200).send("Event published.");
   }
 
@@ -336,6 +347,7 @@ class EventController implements IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -364,6 +376,14 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Cancelled event ${result.value.id}`);
+    if (options?.isHtmx && options.viewSource === "detail") {
+      res.render("events/partials/detail-status-actions", {
+        layout: false,
+        event: result.value,
+        actingUser: currentUser,
+      });
+      return;
+    }
     res.status(200).send("Event cancelled.");
   }
   async showEditForm(

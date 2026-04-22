@@ -342,6 +342,13 @@ class ExpressApp implements IApp {
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           sessionStore(req),
+          {
+            isHtmx: this.isHtmxRequest(req),
+            viewSource:
+              req.body && typeof req.body.viewSource === "string"
+                ? req.body.viewSource
+                : "",
+          },
         );
       }),
     );
@@ -357,6 +364,13 @@ class ExpressApp implements IApp {
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           sessionStore(req),
+          {
+            isHtmx: this.isHtmxRequest(req),
+            viewSource:
+              req.body && typeof req.body.viewSource === "string"
+                ? req.body.viewSource
+                : "",
+          },
         );
       }),
     );
