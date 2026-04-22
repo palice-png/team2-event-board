@@ -24,8 +24,8 @@ class RsvpService implements IRsvpService {
     }
 
     const result = await this.repo.findByUserId(actingUserId);
-    if (!result.ok) {
-      return Err(result.value as MyRsvpsError);
+    if (result.ok === false) {
+      return result;
     }
 
     const now = new Date();
