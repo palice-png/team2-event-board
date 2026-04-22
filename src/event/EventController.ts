@@ -340,6 +340,30 @@ class EventController implements IEventController {
       });
       return;
     }
+    if (options?.isHtmx && options.viewSource === "dashboard") {
+      const detailResult = await this.service.getEventById(
+        result.value.id,
+        currentUser.userId,
+        currentUser.role,
+      );
+      if (detailResult.ok === false) {
+        const status = this.mapErrorStatus(detailResult.value as GetEventError);
+        res.status(status).render("partials/error", {
+          message: detailResult.value.message,
+          layout: false,
+        });
+        return;
+      }
+
+      res.render("events/partials/dashboard-row", {
+        layout: false,
+        row: {
+          event: detailResult.value.event,
+          attendeeCount: detailResult.value.attendeeCount,
+        },
+      });
+      return;
+    }
     res.status(200).send("Event published.");
   }
 
@@ -381,6 +405,30 @@ class EventController implements IEventController {
         layout: false,
         event: result.value,
         actingUser: currentUser,
+      });
+      return;
+    }
+    if (options?.isHtmx && options.viewSource === "dashboard") {
+      const detailResult = await this.service.getEventById(
+        result.value.id,
+        currentUser.userId,
+        currentUser.role,
+      );
+      if (detailResult.ok === false) {
+        const status = this.mapErrorStatus(detailResult.value as GetEventError);
+        res.status(status).render("partials/error", {
+          message: detailResult.value.message,
+          layout: false,
+        });
+        return;
+      }
+
+      res.render("events/partials/dashboard-row", {
+        layout: false,
+        row: {
+          event: detailResult.value.event,
+          attendeeCount: detailResult.value.attendeeCount,
+        },
       });
       return;
     }
