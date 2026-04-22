@@ -3,19 +3,12 @@
 <% } %>
 
 <section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
-  <div class="flex items-start justify-between gap-4 flex-wrap">
-    <div>
-      <p class="text-sm font-medium uppercase tracking-wide text-blue-600 mb-2">
-        Event Detail
-      </p>
-      <h1 class="text-3xl font-bold text-slate-900 mb-3"><%= event.title %></h1>
-      <p class="text-slate-600 max-w-3xl"><%= event.description %></p>
-    </div>
-
-    <div class="px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm min-w-[220px]">
-      <p class="text-sm text-slate-500 mb-1">Status</p>
-      <p class="text-base font-semibold text-slate-800"><%= event.status %></p>
-    </div>
+  <div>
+    <p class="text-sm font-medium uppercase tracking-wide text-blue-600 mb-2">
+      Event Detail
+    </p>
+    <h1 class="text-3xl font-bold text-slate-900 mb-3"><%= event.title %></h1>
+    <p class="text-slate-600 max-w-3xl"><%= event.description %></p>
   </div>
 </section>
 
@@ -65,37 +58,4 @@
   </div>
 </section>
 
-<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
-  <h2 class="text-xl font-semibold text-slate-900 mb-4">Actions</h2>
-
-  <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === event.organizerId) { %>
-    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
-    <div class="flex items-center gap-3 flex-wrap">
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-white text-slate-400 border border-slate-200 cursor-not-allowed text-sm font-medium"
-      >
-        Edit Event
-      </button>
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-white text-slate-400 border border-slate-200 cursor-not-allowed text-sm font-medium"
-      >
-        Cancel Event
-      </button>
-    </div>
-  <% } else { %>
-    <p class="text-slate-500 mb-4">Member action</p>
-    <div class="flex items-center gap-3 flex-wrap">
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
-      >
-        RSVP
-      </button>
-    </div>
-  <% } %>
-</section>
+<%- include("partials/detail-status-actions", { event, actingUser: session.authenticatedUser }) %>
