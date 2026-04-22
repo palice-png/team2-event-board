@@ -71,20 +71,34 @@
   <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === event.organizerId) { %>
     <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
     <div class="flex items-center gap-3 flex-wrap">
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-white text-slate-400 border border-slate-200 cursor-not-allowed text-sm font-medium"
+      
+      <a href="/events/<%= event.id %>/edit"
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-medium hover:bg-blue-700"
       >
         Edit Event
-      </button>
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-white text-slate-400 border border-slate-200 cursor-not-allowed text-sm font-medium"
-      >
-        Cancel Event
-      </button>
+      </a>
+
+      <% if (event.status === "published") { %>
+        <form method="post" action="/events/<%= event.id %>/cancel" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-sm font-medium hover:bg-red-50"
+          >
+            Cancel Event
+          </button>
+        </form>
+      <% } %>
+
+      <% if (event.status === "draft") { %>
+        <form method="post" action="/events/<%= event.id %>/publish" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-green-600 text-white border border-green-600 cursor-pointer text-sm font-medium hover:bg-green-700"
+          >
+            Publish Event
+          </button>
+        </form>
+      <% } %>
     </div>
   <% } else { %>
     <p class="text-slate-500 mb-4">Member action</p>
