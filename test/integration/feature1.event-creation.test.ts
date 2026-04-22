@@ -29,79 +29,79 @@ async function loginAsMember(app: express.Express): Promise<TestAgent> {
 }
 
 describe("Feature 1 HTTP integration: event creation", () => {
-  let app: express.Express;
+    let app: express.Express;
 
-  beforeEach(() => {
-    app = createComposedApp().getExpressApp();
-  });
-
-  it("staff creates an event successfully", async () => {
-    const staffAgent = await loginAsStaff(app);
-    const title = `f1-create-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-
-    const response = await staffAgent.post("/events").type("form").send({
-      title,
-      description: "Feature 1 integration test event",
-      location: "Campus Hall",
-      category: "Workshop",
-      capacity: "25",
-      startDatetime: "2026-05-10T10:00",
-      endDatetime: "2026-05-10T12:00",
+    beforeEach(() => {
+        app = createComposedApp().getExpressApp();
     });
 
-    expect(response.status).toBe(302);
-    expect(response.headers.location).toBe("/organizer/dashboard");
+    it("staff creates an event successfully", async () => {
+        const staffAgent = await loginAsStaff(app);
+        const title = `f1-create-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 
-    const dashboardResponse = await staffAgent.get("/organizer/dashboard");
-    expect(dashboardResponse.status).toBe(200);
-    expect(dashboardResponse.text).toContain(title);
-  });
+        const response = await staffAgent.post("/events").type("form").send({
+        title,
+        description: "Feature 1 integration test event",
+        location: "Campus Hall",
+        category: "Workshop",
+        capacity: "25",
+        startDatetime: "2026-05-10T10:00",
+        endDatetime: "2026-05-10T12:00",
+        });
 
-  it("member user is rejected from creating an event", async () => {
-    const memberAgent = await loginAsMember(app);
+        expect(response.status).toBe(302);
+        expect(response.headers.location).toBe("/organizer/dashboard");
 
-    const response = await memberAgent.post("/events").type("form").send({
-      title: "member-should-fail",
-      description: "Feature 1 integration test event",
-      location: "Campus Hall",
-      category: "Workshop",
-      capacity: "25",
-      startDatetime: "2026-05-10T10:00",
-      endDatetime: "2026-05-10T12:00",
+        const dashboardResponse = await staffAgent.get("/organizer/dashboard");
+        expect(dashboardResponse.status).toBe(200);
+        expect(dashboardResponse.text).toContain(title);
     });
 
-    expect(response.status).toBe(403);
-  });
+    it("member user is rejected from creating an event", async () => {
+        const memberAgent = await loginAsMember(app);
+
+        const response = await memberAgent.post("/events").type("form").send({
+        title: "member-should-fail",
+        description: "Feature 1 integration test event",
+        location: "Campus Hall",
+        category: "Workshop",
+        capacity: "25",
+        startDatetime: "2026-05-10T10:00",
+        endDatetime: "2026-05-10T12:00",
+        });
+
+        expect(response.status).toBe(403);
+    });
 
     it("returns 400 when title is missing", async () => {
-    const staffAgent = await loginAsStaff(app);
+        const staffAgent = await loginAsStaff(app);
 
-    const response = await staffAgent.post("/events").type("form").send({
-      title: "",
-      description: "Feature 1 integration test event",
-      location: "Campus Hall",
-      category: "Workshop",
-      capacity: "25",
-      startDatetime: "2026-05-10T10:00",
-      endDatetime: "2026-05-10T12:00",
+        const response = await staffAgent.post("/events").type("form").send({
+        title: "",
+        description: "Feature 1 integration test event",
+        location: "Campus Hall",
+        category: "Workshop",
+        capacity: "25",
+        startDatetime: "2026-05-10T10:00",
+        endDatetime: "2026-05-10T12:00",
+        });
+
+        expect(response.status).toBe(400);
     });
 
-    expect(response.status).toBe(400);
-  });
+    it("returns 400 when end time is before start time", async () => {
+        const staffAgent = await loginAsStaff(app);
 
-  it("returns 400 when end time is before start time", async () => {
-    const staffAgent = await loginAsStaff(app);
+        const response = await staffAgent.post("/events").type("form").send({
+            title: "invalid-time-event",
+            description: "Feature 1 integration test event",
+            location: "Campus Hall",
+            category: "Workshop",
+            capacity: "25",
+            startDatetime: "2026-05-10T12:00",
+            endDatetime: "2026-05-10T10:00",
+        });
 
-    const response = await staffAgent.post("/events").type("form").send({
-      title: "invalid-time-event",
-      description: "Feature 1 integration test event",
-      location: "Campus Hall",
-      category: "Workshop",
-      capacity: "25",
-      startDatetime: "2026-05-10T12:00",
-      endDatetime: "2026-05-10T10:00",
+        expect(response.status).toBe(400);
     });
-
-    expect(response.status).toBe(400);
-  });
 });
