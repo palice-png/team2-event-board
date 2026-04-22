@@ -5,27 +5,27 @@ import { createComposedApp } from "../../src/composition";
 type TestAgent = ReturnType<typeof request.agent>;
 
 async function loginAsStaff(app: express.Express): Promise<TestAgent> {
-  const agent = request.agent(app);
-  const response = await agent.post("/login").type("form").send({
-    email: "staff@app.test",
-    password: "password123",
-  });
+    const agent = request.agent(app);
+    const response = await agent.post("/login").type("form").send({
+        email: "staff@app.test",
+        password: "password123",
+    });
 
-  expect(response.status).toBe(302);
-  expect(response.headers.location).toBe("/organizer/dashboard");
-  return agent;
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe("/organizer/dashboard");
+    return agent;
 }
 
 async function loginAsMember(app: express.Express): Promise<TestAgent> {
-  const agent = request.agent(app);
-  const response = await agent.post("/login").type("form").send({
+    const agent = request.agent(app);
+    const response = await agent.post("/login").type("form").send({
     email: "user@app.test",
     password: "password123",
-  });
+    });
 
-  expect(response.status).toBe(302);
-  expect(response.headers.location).toBe("/home");
-  return agent;
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe("/home");
+    return agent;
 }
 
 describe("Feature 1 HTTP integration: event creation", () => {
@@ -77,16 +77,17 @@ describe("Feature 1 HTTP integration: event creation", () => {
         const staffAgent = await loginAsStaff(app);
 
         const response = await staffAgent.post("/events").type("form").send({
-        title: "",
-        description: "Feature 1 integration test event",
-        location: "Campus Hall",
-        category: "Workshop",
-        capacity: "25",
-        startDatetime: "2026-05-10T10:00",
-        endDatetime: "2026-05-10T12:00",
+            title: "",
+            description: "Feature 1 integration test event",
+            location: "Campus Hall",
+            category: "Workshop",
+            capacity: "25",
+            startDatetime: "2026-05-10T10:00",
+            endDatetime: "2026-05-10T12:00",
         });
 
         expect(response.status).toBe(400);
+        expect(response.text).toContain("Title is required.");
     });
 
     it("returns 400 when end time is before start time", async () => {
@@ -103,5 +104,24 @@ describe("Feature 1 HTTP integration: event creation", () => {
         });
 
         expect(response.status).toBe(400);
+        expect(response.text).toContain(
+            "End date and time must be after the start date and time.",
+        );
+    });
+
+    it("unauthenticated user gets 401 when creating an event", async () => {
+        const response = await request(app).post("/events").type("form").send({
+        title: "guest-should-fail",
+        description: "Feature 1 integration test event",
+        location: "Campus Hall",
+        category: "Workshop",
+        capacity: "25",
+        startDatetime: "2026-05-10T10:00",
+        endDatetime: "2026-05-10T12:00",
+        });
+
+        expect(response.status).toBe(401);
+        console.log(response.text)
+        expect(response.text).toContain("Please log in to continue.");
     });
 });
