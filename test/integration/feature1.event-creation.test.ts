@@ -121,7 +121,6 @@ describe("Feature 1 HTTP integration: event creation", () => {
         });
 
         expect(response.status).toBe(401);
-        console.log(response.text)
         expect(response.text).toContain("Please log in to continue.");
     });
 });
