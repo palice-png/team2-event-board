@@ -390,6 +390,7 @@ class ExpressApp implements IApp {
           typeof req.body.content === "string" ? req.body.content : "",
           sessionStore(req),
           browserSession,
+          { isHtmx: this.isHtmxRequest(req) },
         );
       }),
     );
@@ -400,11 +401,14 @@ class ExpressApp implements IApp {
         if (!this.requireAuthenticated(req, res)) {
           return;
         }
-
+        const browserSession = touchAppSession(sessionStore(req));
         await this.commentController.deleteComment(
           res,
           typeof req.params.id === "string" ? req.params.id : "",
+          typeof req.body.eventId === "string" ? req.body.eventId : "",
           sessionStore(req),
+          browserSession,
+          { isHtmx: this.isHtmxRequest(req) },
         );
       }),
     );

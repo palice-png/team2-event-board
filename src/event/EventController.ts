@@ -19,7 +19,7 @@ import type {
   PublishEventError,
   UpdateEventError,
 } from "./errors";
-
+import type { ICommentService } from "../comments/CommentService";
 
 export interface IEventController {
   showCreateForm(
@@ -84,6 +84,7 @@ class EventController implements IEventController {
   constructor(
     private readonly service: IEventService,
     private readonly logger: ILoggingService,
+    private readonly commentService: ICommentService,
   ) {}
 
   private isHtmxRequest(req: Request): boolean {
@@ -277,10 +278,18 @@ class EventController implements IEventController {
         return;
       }
 
-    res.render(
-      "events/detail",
-      this.buildEventDetailViewModel(session, result.value),
-    );
+      const commentsResult = await this.commentService.listCommentsByEventId(
+        result.value.event.id,
+      );
+      const comments = commentsResult.ok ? commentsResult.value : [];
+  
+      res.render("events/detail", {
+        pageError: null,
+        session,
+        event: result.value.event,
+        attendeeCount: result.value.attendeeCount,
+        comments,
+      });
   }
 
   async showOrganizerDashboard(
@@ -593,6 +602,7 @@ class EventController implements IEventController {
 export function CreateEventController(
   service: IEventService,
   logger: ILoggingService,
+  commentService: ICommentService,
 ): IEventController {
-  return new EventController(service, logger);
+  return new EventController(service, logger, commentService);
 }

@@ -11,12 +11,16 @@ export interface ICommentController {
     content: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
+    options?: { isHtmx?: boolean },
   ): Promise<void>;
 
   deleteComment(
     res: Response,
     commentId: string,
+    eventId: string,
     store: AppSessionStore,
+    session: IAppBrowserSession,
+    options?: { isHtmx?: boolean },
   ): Promise<void>;
 }
 
@@ -32,6 +36,7 @@ class CommentController implements ICommentController {
     content: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
+    options?: { isHtmx?: boolean },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -60,13 +65,29 @@ class CommentController implements ICommentController {
     }
 
     this.logger.info(`Comment posted on event ${eventId}`);
+
+    if (options?.isHtmx) {
+      const commentsResult = await this.service.listCommentsByEventId(eventId);
+      const comments = commentsResult.ok ? commentsResult.value : [];
+      res.render("events/partials/comments", {
+        layout: false,
+        comments,
+        eventId,
+        session,
+      });
+      return;
+    }
+
     res.redirect(`/events/${eventId}`);
   }
 
   async deleteComment(
     res: Response,
     commentId: string,
+    eventId: string,
     store: AppSessionStore,
+    session: IAppBrowserSession,
+    options?: { isHtmx?: boolean },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -96,6 +117,19 @@ class CommentController implements ICommentController {
     }
 
     this.logger.info(`Deleted comment ${commentId}`);
+
+    if (options?.isHtmx) {
+      const commentsResult = await this.service.listCommentsByEventId(eventId);
+      const comments = commentsResult.ok ? commentsResult.value : [];
+      res.render("events/partials/comments", {
+        layout: false,
+        comments,
+        eventId,
+        session,
+      });
+      return;
+    }
+
     res.redirect("back");
   }
 }
