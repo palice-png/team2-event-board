@@ -221,5 +221,11 @@ class InMemoryEventRepository implements IEventRepository {
 
 
 export function CreateInMemoryEventRepository(): IEventRepository {
-  return new InMemoryEventRepository();
+  const repo = new InMemoryEventRepository();
+
+  for (const event of DEMO_EVENTS) {
+    eventStore.set(event.id, event);
+  }
+
+  return repo;
 }
