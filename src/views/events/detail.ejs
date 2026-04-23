@@ -59,3 +59,5 @@
 </section>
 
 <%- include("partials/detail-status-actions", { event, actingUser: session.authenticatedUser }) %>
+
+<%- include("partials/comments", { comments, eventId: event.id, session }) %>
