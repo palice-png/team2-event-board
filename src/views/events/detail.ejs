@@ -58,6 +58,51 @@
   </div>
 </section>
 
-<%- include("partials/detail-status-actions", { event, actingUser: session.authenticatedUser }) %>
+<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+  <h2 class="text-xl font-semibold text-slate-900 mb-4">Actions</h2>
 
-<%- include("partials/comments", { comments, eventId: event.id, session }) %>
+  <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === event.organizerId) { %>
+    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      
+      <a href="/events/<%= event.id %>/edit"
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-medium hover:bg-blue-700"
+      >
+        Edit Event
+      </a>
+
+      <% if (event.status === "published") { %>
+        <form method="post" action="/events/<%= event.id %>/cancel" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-sm font-medium hover:bg-red-50"
+          >
+            Cancel Event
+          </button>
+        </form>
+      <% } %>
+
+      <% if (event.status === "draft") { %>
+        <form method="post" action="/events/<%= event.id %>/publish" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-green-600 text-white border border-green-600 cursor-pointer text-sm font-medium hover:bg-green-700"
+          >
+            Publish Event
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p class="text-slate-500 mb-4">Member action</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      <button
+        type="button"
+        disabled
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
+      >
+        RSVP
+      </button>
+    </div>
+  <% } %>
+</section>
