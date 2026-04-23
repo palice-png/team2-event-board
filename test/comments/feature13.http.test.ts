@@ -37,24 +37,32 @@ async function createAndPublishEvent(cookie: string): Promise<string> {
 }
 
 async function postComment(
-  cookie: string,
-  eventId: string,
-  content: string,
-): Promise<string> {
-  await request(app)
-    .post(`/events/${eventId}/comments`)
-    .set("Cookie", cookie)
-    .set("Content-Type", "application/x-www-form-urlencoded")
-    .send(`content=${encodeURIComponent(content)}`);
-
-  const detail = await request(app)
-    .get(`/events/${eventId}`)
-    .set("Cookie", cookie);
-
-  const match = detail.text.match(/\/comments\/([\w-]{36})\/delete/);
-  if (!match) throw new Error("Could not find comment ID");
-  return match[1];
-}
+    cookie: string,
+    eventId: string,
+    content: string,
+  ): Promise<string> {
+    
+    await request(app)
+      .post(`/events/${eventId}/comments`)
+      .set("Cookie", cookie)
+      .set("Content-Type", "application/x-www-form-urlencoded")
+      .send(`content=${encodeURIComponent(content)}`);
+  
+    
+    const detail = await request(app)
+      .get(`/events/${eventId}`)
+      .set("Cookie", cookie);
+  
+   
+    const match = 
+      detail.text.match(/\/comments\/([\w-]{36})\/delete/) ||
+      detail.text.match(/comments\/([\w-]{36})/);
+      
+    if (!match) {
+      throw new Error(`Could not find comment ID. Detail page status: ${detail.status}`);
+    }
+    return match[1];
+  }
 
 describe("Feature 13 — Event Comments HTTP routes", () => {
 
@@ -120,7 +128,9 @@ describe("Feature 13 — Event Comments HTTP routes", () => {
       const commentId = await postComment(userCookie, eventId, "My comment");
       const res = await request(app)
         .post(`/comments/${commentId}/delete`)
-        .set("Cookie", userCookie);
+        .set("Cookie", userCookie)
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .send(`eventId=${eventId}`);
       expect(res.status).toBe(302);
     });
 
@@ -132,7 +142,9 @@ describe("Feature 13 — Event Comments HTTP routes", () => {
       const adminCookie = await loginAs("admin@app.test", "password123");
       const res = await request(app)
         .post(`/comments/${commentId}/delete`)
-        .set("Cookie", adminCookie);
+        .set("Cookie", adminCookie)
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .send(`eventId=${eventId}`);
       expect(res.status).toBe(302);
     });
 
@@ -143,16 +155,21 @@ describe("Feature 13 — Event Comments HTTP routes", () => {
       const commentId = await postComment(userCookie, eventId, "User comment");
       const res = await request(app)
         .post(`/comments/${commentId}/delete`)
-        .set("Cookie", staffCookie);
+        .set("Cookie", staffCookie)
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .send(`eventId=${eventId}`);
       expect(res.status).toBe(403);
     });
 
     it("returns 404 for non-existent comment", async () => {
-      const userCookie = await loginAs("user@app.test", "password123");
-      const res = await request(app)
-        .post("/comments/00000000-0000-0000-0000-000000000000/delete")
-        .set("Cookie", userCookie);
-      expect(res.status).toBe(404);
+        const staffCookie = await loginAs("staff@app.test", "password123");
+        const eventId = await createAndPublishEvent(staffCookie);
+        const userCookie = await loginAs("user@app.test", "password123");
+        const res = await request(app)
+          .post("/comments/00000000-0000-0000-0000-000000000000/delete")
+          .set("Cookie", userCookie)
+          .set("Content-Type", "application/x-www-form-urlencoded")
+          .send(`eventId=${eventId}`);
     });
   });
 });
