@@ -104,4 +104,29 @@ describe("Feature 2 HTTP integration: event detail", () => {
         expect(detailResponse.text).toContain("Campus Hall");
         expect(detailResponse.text).toContain("Workshop");
     });
+
+    it("missing event detail returns 404", async () => {
+        const memberAgent = await loginAsMember(app);
+
+        const response = await memberAgent.get("/events/not-found-event-id");
+
+        expect(response.status).toBe(404);
+        expect(response.text).toContain("Event not found.");
+    });
+
+    it("organizer can view their own draft event detail", async () => {
+        const staffAgent = await loginAsStaff(app);
+
+        const eventId = await createDraftEventAndGetId(
+        app,
+        staffAgent,
+        "feature2-own-draft",
+        );
+
+        const response = await staffAgent.get(`/events/${eventId}`);
+
+        expect(response.status).toBe(200);
+        expect(response.text).toContain("Feature 2 integration test event");
+        expect(response.text).toContain("Campus Hall");
+    });
 });
