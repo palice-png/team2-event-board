@@ -129,4 +129,37 @@ describe("Feature 2 HTTP integration: event detail", () => {
         expect(response.text).toContain("Feature 2 integration test event");
         expect(response.text).toContain("Campus Hall");
     });
+
+    it("admin can view another organizer's draft event detail", async () => {
+        const staffAgent = await loginAsStaff(app);
+        const adminAgent = await loginAsAdmin(app);
+
+        const eventId = await createDraftEventAndGetId(
+        app,
+        staffAgent,
+        "feature2-admin-draft",
+        );
+
+        const response = await adminAgent.get(`/events/${eventId}`);
+
+        expect(response.status).toBe(200);
+        expect(response.text).toContain("Feature 2 integration test event");
+        expect(response.text).toContain("Campus Hall");
+    });
+
+    it("member gets 404 when trying to view another organizer's draft event", async () => {
+        const staffAgent = await loginAsStaff(app);
+        const memberAgent = await loginAsMember(app);
+
+        const eventId = await createDraftEventAndGetId(
+        app,
+        staffAgent,
+        "feature2-hidden-draft",
+        );
+
+        const response = await memberAgent.get(`/events/${eventId}`);
+
+        expect(response.status).toBe(404);
+        expect(response.text).toContain("Event not found.");
+    });
 });
