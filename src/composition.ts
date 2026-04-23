@@ -32,10 +32,7 @@ export function createComposedApp(logger?: ILoggingService): IApp {
     adminUserService,
     resolvedLogger,
   );
-  //Event wiring
-  const eventRepository = CreateInMemoryEventRepository();
-  const eventService = CreateEventService(eventRepository);
-  const eventController = CreateEventController(eventService, resolvedLogger);
+
 
   // RSVP wiring
   const rsvpRepo = CreateInMemoryRsvpRepository();
@@ -47,6 +44,10 @@ export function createComposedApp(logger?: ILoggingService): IApp {
   const commentService = CreateCommentService(commentRepo);
   const commentController = CreateCommentController(commentService, resolvedLogger);
   
+    //Event wiring
+    const eventRepository = CreateInMemoryEventRepository();
+    const eventService = CreateEventService(eventRepository);
+    const eventController = CreateEventController(eventService, resolvedLogger, commentService);
 
   return CreateApp(authController, rsvpController, eventController, commentController, resolvedLogger);
 }
