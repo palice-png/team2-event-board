@@ -303,6 +303,7 @@ class ExpressApp implements IApp {
         const browserSession = touchAppSession(sessionStore(req));
 
         await this.eventController.createFromForm(
+          req,
           res,
           {
             title: typeof req.body.title === "string" ? req.body.title : "",
@@ -342,6 +343,13 @@ class ExpressApp implements IApp {
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           sessionStore(req),
+          {
+            isHtmx: this.isHtmxRequest(req),
+            viewSource:
+              req.body && typeof req.body.viewSource === "string"
+                ? req.body.viewSource
+                : "",
+          },
         );
       }),
     );
@@ -357,6 +365,13 @@ class ExpressApp implements IApp {
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           sessionStore(req),
+          {
+            isHtmx: this.isHtmxRequest(req),
+            viewSource:
+              req.body && typeof req.body.viewSource === "string"
+                ? req.body.viewSource
+                : "",
+          },
         );
       }),
     );

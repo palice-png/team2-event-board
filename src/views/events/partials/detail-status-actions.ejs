@@ -1,0 +1,67 @@
+<section id="detail-status-actions" class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+  <div class="flex items-start justify-between gap-4 flex-wrap mb-4">
+    <h2 class="text-xl font-semibold text-slate-900">Actions</h2>
+    <div class="px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 shadow-sm min-w-[220px]">
+      <p class="text-sm text-slate-500 mb-1">Status</p>
+      <p class="text-base font-semibold text-slate-800"><%= event.status %></p>
+    </div>
+  </div>
+
+  <% if (actingUser?.role === "admin" || actingUser?.userId === event.organizerId) { %>
+    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      <% if (event.status === "draft") { %>
+        <form
+          method="post"
+          action="/events/<%= event.id %>/publish"
+          hx-post="/events/<%= event.id %>/publish"
+          hx-target="#detail-status-actions"
+          hx-swap="outerHTML"
+          class="m-0"
+        >
+          <input type="hidden" name="viewSource" value="detail" />
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700"
+          >
+            Publish Event
+          </button>
+        </form>
+      <% } %>
+
+      <% if (event.status === "published") { %>
+        <form
+          method="post"
+          action="/events/<%= event.id %>/cancel"
+          hx-post="/events/<%= event.id %>/cancel"
+          hx-target="#detail-status-actions"
+          hx-swap="outerHTML"
+          class="m-0"
+        >
+          <input type="hidden" name="viewSource" value="detail" />
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium cursor-pointer hover:bg-slate-800"
+          >
+            Cancel Event
+          </button>
+        </form>
+      <% } %>
+
+      <% if (event.status === "cancelled" || event.status === "past") { %>
+        <p class="text-slate-500 mb-0">No lifecycle actions available for this event.</p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p class="text-slate-500 mb-4">Member action</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      <button
+        type="button"
+        disabled
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
+      >
+        RSVP
+      </button>
+    </div>
+  <% } %>
+</section>

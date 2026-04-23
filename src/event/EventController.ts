@@ -1,4 +1,4 @@
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import {
   getAuthenticatedUser,
   type AppSessionStore,
@@ -28,6 +28,7 @@ export interface IEventController {
     session: IAppBrowserSession,
   ): Promise<void>;
   createFromForm(
+    req: Request,
     res: Response,
     eventInput: ICreateEventInput,
     store: AppSessionStore,
@@ -42,11 +43,13 @@ export interface IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
   cancelFromForm(
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
   showEventDetail(
     res: Response,
@@ -82,6 +85,10 @@ class EventController implements IEventController {
     private readonly service: IEventService,
     private readonly logger: ILoggingService,
   ) {}
+
+  private isHtmxRequest(req: Request): boolean {
+    return req.get("HX-Request") === "true";
+  }
 
   private emptyCreateForm(): ICreateEventInput {
     return {
@@ -170,6 +177,7 @@ class EventController implements IEventController {
   }
 
   async createFromForm(
+    req: Request,
     res: Response,
     eventInput: ICreateEventInput,
     store: AppSessionStore,
@@ -177,6 +185,15 @@ class EventController implements IEventController {
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
+      if (this.isHtmxRequest(req)) {
+        res.status(401).render("events/partials/createEventResult", {
+          successMessage: null,
+          errorMessage: "Please log in to continue.",
+          layout: false,
+        });
+        return;
+      }
+
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
         layout: false,
@@ -195,6 +212,15 @@ class EventController implements IEventController {
       const log = status >= 500 ? this.logger.error : this.logger.warn;
       log.call(this.logger, `Create event failed: ${result.value.message}`);
 
+      if (this.isHtmxRequest(req)) {
+        res.status(status).render("events/partials/createEventResult", {
+          successMessage: null,
+          errorMessage: result.value.message,
+          layout: false,
+        });
+        return;
+      }
+
       res.status(status).render(
         "events/new",
         this.buildCreateViewModel(session, result.value.message, eventInput),
@@ -203,6 +229,16 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Created draft event ${result.value.id}`);
+
+    if (this.isHtmxRequest(req)) {
+      res.status(201).render("events/partials/createEventResult", {
+        successMessage: "Event created successfully.",
+        errorMessage: null,
+        layout: false,
+      });
+      return;
+    }
+
     res.redirect("/organizer/dashboard");
   }
 
@@ -301,6 +337,7 @@ class EventController implements IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -329,6 +366,38 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Published event ${result.value.id}`);
+    if (options?.isHtmx && options.viewSource === "detail") {
+      res.render("events/partials/detail-status-actions", {
+        layout: false,
+        event: result.value,
+        actingUser: currentUser,
+      });
+      return;
+    }
+    if (options?.isHtmx && options.viewSource === "dashboard") {
+      const detailResult = await this.service.getEventById(
+        result.value.id,
+        currentUser.userId,
+        currentUser.role,
+      );
+      if (detailResult.ok === false) {
+        const status = this.mapErrorStatus(detailResult.value as GetEventError);
+        res.status(status).render("partials/error", {
+          message: detailResult.value.message,
+          layout: false,
+        });
+        return;
+      }
+
+      res.render("events/partials/dashboard-row", {
+        layout: false,
+        row: {
+          event: detailResult.value.event,
+          attendeeCount: detailResult.value.attendeeCount,
+        },
+      });
+      return;
+    }
     res.status(200).send("Event published.");
   }
 
@@ -336,6 +405,7 @@ class EventController implements IEventController {
     res: Response,
     eventId: string,
     store: AppSessionStore,
+    options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
     if (!currentUser) {
@@ -364,6 +434,38 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Cancelled event ${result.value.id}`);
+    if (options?.isHtmx && options.viewSource === "detail") {
+      res.render("events/partials/detail-status-actions", {
+        layout: false,
+        event: result.value,
+        actingUser: currentUser,
+      });
+      return;
+    }
+    if (options?.isHtmx && options.viewSource === "dashboard") {
+      const detailResult = await this.service.getEventById(
+        result.value.id,
+        currentUser.userId,
+        currentUser.role,
+      );
+      if (detailResult.ok === false) {
+        const status = this.mapErrorStatus(detailResult.value as GetEventError);
+        res.status(status).render("partials/error", {
+          message: detailResult.value.message,
+          layout: false,
+        });
+        return;
+      }
+
+      res.render("events/partials/dashboard-row", {
+        layout: false,
+        row: {
+          event: detailResult.value.event,
+          attendeeCount: detailResult.value.attendeeCount,
+        },
+      });
+      return;
+    }
     res.status(200).send("Event cancelled.");
   }
   async showEditForm(
