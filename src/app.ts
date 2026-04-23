@@ -303,6 +303,7 @@ class ExpressApp implements IApp {
         const browserSession = touchAppSession(sessionStore(req));
 
         await this.eventController.createFromForm(
+          req,
           res,
           {
             title: typeof req.body.title === "string" ? req.body.title : "",
