@@ -42,3 +42,15 @@ model Event {
 
   rsvps         Rsvp[]
 }
+
+model Rsvp {
+  id        String     @id @default(cuid())
+  eventId   String
+  userId    String                        // auth-managed user — no FK
+  status    RsvpStatus
+  createdAt DateTime   @default(now())   // deterministic waitlist ordering
+
+  event     Event      @relation(fields: [eventId], references: [id])
+
+  @@unique([eventId, userId])            // one RSVP per member per event
+}
