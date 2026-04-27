@@ -22,7 +22,23 @@ enum EventCategory {
 }
 
 enum RsvpStatus {
-  confirmed    // team decision — spec says "going" but team standardized on "confirmed" (commit 78155ac)
-  waitlisted
+  confirmed    
   cancelled
+}
+
+model Event {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  location      String
+  category      EventCategory
+  capacity      Int?                       // null = no limit
+  status        EventStatus   @default(draft)
+  startDatetime DateTime
+  endDatetime   DateTime
+  organizerId   String                     // auth-managed user — no FK
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  rsvps         Rsvp[]
 }
