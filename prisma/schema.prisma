@@ -6,14 +6,23 @@ datasource db {
   provider = "sqlite"
 }
 
-// TODO: Define your project's data models here.
-// Example:
-//
-// model Item {
-//   id        Int      @id @default(autoincrement())
-//   title     String
-//   body      String
-//   status    String   @default("active")
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+enum EventStatus {
+  draft
+  published
+  cancelled
+  past
+}
+
+enum EventCategory {
+  social
+  educational
+  volunteer
+  sports
+  arts
+}
+
+enum RsvpStatus {
+  confirmed    // team decision — spec says "going" but team standardized on "confirmed" (commit 78155ac)
+  waitlisted
+  cancelled
+}
