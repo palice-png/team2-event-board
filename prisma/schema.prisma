@@ -42,6 +42,7 @@ model Event {
   updatedAt     DateTime      @updatedAt
 
   rsvps         Rsvp[]
+  comments      Comment[]
 }
 
 model Rsvp {
@@ -54,4 +55,15 @@ model Rsvp {
   event     Event      @relation(fields: [eventId], references: [id])
 
   @@unique([eventId, userId])            // one RSVP per member per event
+}
+
+model Comment{
+  id        String     @id @default(cuid())
+  eventId   String
+  userId    String                        
+  body      String
+  createdAt DateTime   @default(now())   
+
+  event Event @relation(fields: [eventId], references: [id])
+  
 }
