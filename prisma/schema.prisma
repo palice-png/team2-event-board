@@ -22,7 +22,8 @@ enum EventCategory {
 }
 
 enum RsvpStatus {
-  confirmed    
+  confirmed
+  waitlisted    
   cancelled
 }
 
