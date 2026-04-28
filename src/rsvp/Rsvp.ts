@@ -6,6 +6,7 @@ export interface IRsvpRecord {
   eventId: string;
   userId: string;
   status: RsvpStatus;
+  createdAt: string;
 }
 
 // Minimal event shape needed for the dashboard join.

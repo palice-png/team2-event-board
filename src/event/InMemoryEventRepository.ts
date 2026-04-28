@@ -1,6 +1,7 @@
 import { Err, Ok, type Result } from "../lib/result";
 import type { EventStatus, IEventRecord } from "./Event";
 import type { IEventRepository, ICreateEventRecordInput, EventRepositoryError } from "./EventRepository";
+import type { RsvpStatus, IRsvpRecord } from "../rsvp/Rsvp";
 
 export const DEMO_EVENTS: IEventRecord[] = [
   {
@@ -33,21 +34,12 @@ export const DEMO_EVENTS: IEventRecord[] = [
   },
 ];
 
-export type RsvpStatus = "going" | "waitlisted" | "cancelled";
-
-export interface IRsvpRecord {
-  id: string;
-  eventId: string;
-  userId: string;
-  status: RsvpStatus;
-  createdAt: string;
-}
 export const DEMO_RSVPS: IRsvpRecord[] = [
   {
     id: "rsvp-1",
     eventId: "event-2",
     userId: "user-reader",
-    status: "going",
+    status: "confirmed",
     createdAt: "2026-04-15T12:10:00.000Z",
   },
 ];
@@ -136,7 +128,7 @@ class InMemoryEventRepository implements IEventRepository {
   ): Promise<Result<number, EventRepositoryError>> {
     try {
       const count = rsvpStore.filter(
-        (rsvp) => rsvp.eventId === eventId && rsvp.status === "going",
+        (rsvp) => rsvp.eventId === eventId && rsvp.status === "confirmed",
       ).length;
 
       return Ok(count);
