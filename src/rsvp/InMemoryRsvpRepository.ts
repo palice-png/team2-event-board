@@ -42,7 +42,7 @@ const DEMO_EVENTS: IEventStub[] = [
 
 const DEMO_RSVPS: IRsvpRecord[] = [
   // user-reader: upcoming confirmed
-  { id: "rsvp-1", eventId: "event-1", userId: "user-reader", status: "confirmed" },
+  { id: "rsvp-1", eventId: "event-1", userId: "user-reader", status: "confirmed"},
   // user-reader: upcoming waitlisted (further in future, so sorts after rsvp-1)
   { id: "rsvp-2", eventId: "event-2", userId: "user-reader", status: "waitlisted" },
   // user-reader: cancelled RSVP on a future published event (goes to pastOrCancelled)
