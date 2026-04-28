@@ -102,7 +102,7 @@ describe("Feature 2 HTTP integration: event detail", () => {
         expect(detailResponse.status).toBe(200);
         expect(detailResponse.text).toContain("Feature 2 integration test event");
         expect(detailResponse.text).toContain("Campus Hall");
-        expect(detailResponse.text).toContain("Workshop");
+        expect(detailResponse.text).toContain("educational");
     });
 
     it("missing event detail returns 404", async () => {

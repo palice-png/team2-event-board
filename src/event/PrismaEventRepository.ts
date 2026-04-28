@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   PrismaClient,
   EventCategory as PrismaEventCategoryConst,
@@ -109,6 +110,7 @@ class PrismaEventRepository implements IEventRepository {
     try {
       const row = await this.prisma.event.create({
         data: {
+          id: randomUUID(),
           title: input.title,
           description: input.description,
           location: input.location,
