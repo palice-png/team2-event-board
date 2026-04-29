@@ -19,6 +19,7 @@ import { CreateRsvpController } from "./rsvp/RsvpController";
 import { CreatePrismaCommentRepository } from "./comments/PrismaCommentRepository";
 import { CreateCommentService } from "./comments/CommentService";
 import { CreateCommentController } from "./comments/CommentController";
+import { CreatePrismaRsvpRepository } from "./rsvp/PrismaRsvpRepository";
 
 export function createComposedApp(logger?: ILoggingService): IApp {
   const resolvedLogger = logger ?? CreateLoggingService();
@@ -42,7 +43,7 @@ export function createComposedApp(logger?: ILoggingService): IApp {
 
 
   // RSVP wiring
-  const rsvpRepo = CreateInMemoryRsvpRepository();
+  const rsvpRepo = CreatePrismaRsvpRepository(prisma);
   const rsvpService = CreateRsvpService(rsvpRepo);
   const rsvpController = CreateRsvpController(rsvpService, resolvedLogger);
 
