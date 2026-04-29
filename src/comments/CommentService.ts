@@ -12,7 +12,7 @@ export type CommentError =
 export interface ICommentService {
   createComment(
     eventId: string,
-    content: string,
+    body: string,
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<CommentSummary, CommentError>>;
@@ -33,7 +33,7 @@ class CommentService implements ICommentService {
 
   async createComment(
     eventId: string,
-    content: string,
+    body: string,
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<CommentSummary, CommentError>> {
@@ -41,7 +41,7 @@ class CommentService implements ICommentService {
       return Err({ name: "UnauthorizedError" as const, message: "User must be logged in." });
     }
 
-    if (!content?.trim()) {
+    if (!body?.trim()) {
       return Err({ name: "ValidationError" as const, message: "Comment cannot be empty." });
     }
 
@@ -49,7 +49,7 @@ class CommentService implements ICommentService {
       id: crypto.randomUUID(),
       eventId,
       userId: actingUserId,
-      content: content.trim(),
+      body: body.trim(),
       createdAt: new Date().toISOString(),
     };
 
@@ -63,7 +63,7 @@ class CommentService implements ICommentService {
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<void, CommentError>> {
-    const comment = this.repo.getById(commentId);
+    const comment = await this.repo.getById(commentId);
 
     if (!comment) {
       return Err({ name: "CommentNotFoundError" as const, message: "Comment not found." });
@@ -84,7 +84,7 @@ class CommentService implements ICommentService {
   async listCommentsByEventId(
     eventId: string,
   ): Promise<Result<CommentSummary[], CommentError>> {
-    const comments = this.repo.listByEventId(eventId);
+    const comments = await this.repo.listByEventId(eventId);
     return Ok(comments);
   }
 }

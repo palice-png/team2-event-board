@@ -3,21 +3,21 @@ import type { ICommentRecord, ICommentRepository } from "./CommentRepository";
 const commentStore = new Map<string, ICommentRecord>();
 
 class InMemoryCommentRepository implements ICommentRepository {
-  create(comment: ICommentRecord): void {
+  async create(comment: ICommentRecord): Promise<void> {
     commentStore.set(comment.id, comment);
   }
 
-  getById(id: string): ICommentRecord | null {
+  async getById(id: string): Promise<ICommentRecord | null> {
     return commentStore.get(id) ?? null;
   }
 
-  listByEventId(eventId: string): ICommentRecord[] {
+  async listByEventId(eventId: string): Promise<ICommentRecord[]>{
     return [...commentStore.values()].filter(
       (comment) => comment.eventId === eventId,
     );
   }
 
-  delete(id: string): void {
+  async delete(id: string): Promise<void>{
     commentStore.delete(id);
   }
 }

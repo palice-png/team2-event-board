@@ -15,7 +15,7 @@ describe("CommentService — Feature 13", () => {
       const result = await service.createComment("event-1", "Great event!", "user-1", "user");
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(result.value.content).toBe("Great event!");
+        expect(result.value.body).toBe("Great event!");
         expect(result.value.eventId).toBe("event-1");
         expect(result.value.userId).toBe("user-1");
       }
@@ -26,7 +26,7 @@ describe("CommentService — Feature 13", () => {
       const result = await service.createComment("event-1", "  Great event!  ", "user-1", "user");
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(result.value.content).toBe("Great event!");
+        expect(result.value.body).toBe("Great event!");
       }
     });
 

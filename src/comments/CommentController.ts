@@ -8,7 +8,7 @@ export interface ICommentController {
   postComment(
     res: Response,
     eventId: string,
-    content: string,
+    body: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -33,7 +33,7 @@ class CommentController implements ICommentController {
   async postComment(
     res: Response,
     eventId: string,
-    content: string,
+    body: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -49,7 +49,7 @@ class CommentController implements ICommentController {
 
     const result = await this.service.createComment(
       eventId,
-      content,
+      body,
       currentUser.userId,
       currentUser.role,
     );
