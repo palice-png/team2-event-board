@@ -38,3 +38,7 @@ class PrismaRsvpRepository implements IRsvpRepository {
       }
     }
 }
+
+export function CreatePrismaRsvpRepository(prisma: PrismaClient): IRsvpRepository {
+    return new PrismaRsvpRepository(prisma);
+  }
