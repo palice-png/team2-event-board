@@ -16,7 +16,7 @@ import type { ILoggingService } from "./service/LoggingService";
 import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
 import { CreateRsvpService } from "./rsvp/RsvpService";
 import { CreateRsvpController } from "./rsvp/RsvpController";
-import { CreateInMemoryCommentRepository } from "./comments/InMemoryCommentRepository";
+import { CreatePrismaCommentRepository } from "./comments/PrismaCommentRepository";
 import { CreateCommentService } from "./comments/CommentService";
 import { CreateCommentController } from "./comments/CommentController";
 
@@ -47,7 +47,7 @@ export function createComposedApp(logger?: ILoggingService): IApp {
   const rsvpController = CreateRsvpController(rsvpService, resolvedLogger);
 
   //Comment wiring
-  const commentRepo = CreateInMemoryCommentRepository();
+  const commentRepo = CreatePrismaCommentRepository(prisma);
   const commentService = CreateCommentService(commentRepo);
   const commentController = CreateCommentController(commentService, resolvedLogger);
   
