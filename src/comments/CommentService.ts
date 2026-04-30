@@ -12,7 +12,7 @@ export type CommentError =
 export interface ICommentService {
   createComment(
     eventId: string,
-    body: string,
+    content: string,
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<CommentSummary, CommentError>>;
@@ -33,7 +33,7 @@ class CommentService implements ICommentService {
 
   async createComment(
     eventId: string,
-    body: string,
+    content: string,
     actingUserId: string,
     actingUserRole: UserRole,
   ): Promise<Result<CommentSummary, CommentError>> {
@@ -41,7 +41,7 @@ class CommentService implements ICommentService {
       return Err({ name: "UnauthorizedError" as const, message: "User must be logged in." });
     }
 
-    if (!body?.trim()) {
+    if (!content?.trim()) {
       return Err({ name: "ValidationError" as const, message: "Comment cannot be empty." });
     }
 
@@ -49,11 +49,11 @@ class CommentService implements ICommentService {
       id: crypto.randomUUID(),
       eventId,
       userId: actingUserId,
-      body: body.trim(),
+      body: content.trim(),
       createdAt: new Date().toISOString(),
     };
 
-    this.repo.create(comment);
+    await this.repo.create(comment);
 
     return Ok(comment);
   }
@@ -76,7 +76,7 @@ class CommentService implements ICommentService {
       return Err({ name: "UnauthorizedError" as const, message: "Not allowed to delete this comment." });
     }
 
-    this.repo.delete(commentId);
+    await this.repo.delete(commentId);
 
     return Ok(undefined);
   }
