@@ -313,7 +313,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -365,7 +365,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -438,7 +438,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -511,7 +511,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -547,7 +547,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
@@ -587,7 +587,7 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
       res.status(401).render("partials/error", {
