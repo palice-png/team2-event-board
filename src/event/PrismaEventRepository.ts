@@ -26,7 +26,10 @@ const PRISMA_CATEGORY_VALUES = new Set<string>(
   Object.values(PrismaEventCategoryConst) as string[],
 );
 
-/** Maps free-form / legacy category strings to Prisma `EventCategory` without changing the schema. */
+/**
+ * Normalizes form and legacy category values into the Prisma EventCategory enum.
+ * This keeps Sprint 2 form/tests compatible while persisting valid Sprint 3 data.
+ */
 const CATEGORY_ALIASES: Record<string, PrismaEventCategory> = {
   workshop: "educational",
   seminar: "educational",
@@ -47,6 +50,7 @@ function categoryStringToPrismaCategory(
   raw: string,
 ): Result<PrismaEventCategory, EventRepositoryError> {
   const trimmed = raw.trim();
+
   if (!trimmed) {
     return Err(
       UnexpectedDependencyError("Category is required for persistence."),
@@ -54,28 +58,30 @@ function categoryStringToPrismaCategory(
   }
 
   const lower = trimmed.toLowerCase();
+
   if (PRISMA_CATEGORY_VALUES.has(lower)) {
     return Ok(lower as PrismaEventCategory);
   }
 
   const viaAlias = CATEGORY_ALIASES[lower];
+
   if (viaAlias) {
     return Ok(viaAlias);
   }
 
   return Err(
     UnexpectedDependencyError(
-      "Unable to persist category: use a supported category (e.g. social, educational, volunteer, sports, arts).",
+      "Unsupported event category for database persistence.",
     ),
   );
 }
 
-function isRecordNotFound(e: unknown): boolean {
+function isRecordNotFound(error: unknown): boolean {
   return (
-    typeof e === "object" &&
-    e !== null &&
-    "code" in e &&
-    (e as { code: string }).code === "P2025"
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2025"
   );
 }
 
@@ -103,6 +109,7 @@ class PrismaEventRepository implements IEventRepository {
     input: ICreateEventRecordInput,
   ): Promise<Result<IEventRecord, EventRepositoryError>> {
     const categoryResult = categoryStringToPrismaCategory(input.category);
+
     if (categoryResult.ok === false) {
       return categoryResult;
     }
@@ -124,6 +131,7 @@ class PrismaEventRepository implements IEventRepository {
           updatedAt: new Date(input.updatedAt),
         },
       });
+
       return Ok(mapPrismaEventToRecord(row));
     } catch {
       return Err(UnexpectedDependencyError("Unable to create event."));
@@ -137,6 +145,7 @@ class PrismaEventRepository implements IEventRepository {
       const row = await this.prisma.event.findUnique({
         where: { id: eventId },
       });
+
       return Ok(row ? mapPrismaEventToRecord(row) : null);
     } catch {
       return Err(UnexpectedDependencyError("Unable to read event."));
@@ -148,6 +157,7 @@ class PrismaEventRepository implements IEventRepository {
       const rows = await this.prisma.event.findMany({
         orderBy: { startDatetime: "asc" },
       });
+
       return Ok(rows.map(mapPrismaEventToRecord));
     } catch {
       return Err(UnexpectedDependencyError("Unable to list events."));
@@ -162,6 +172,7 @@ class PrismaEventRepository implements IEventRepository {
         where: { organizerId },
         orderBy: { startDatetime: "asc" },
       });
+
       return Ok(rows.map(mapPrismaEventToRecord));
     } catch {
       return Err(UnexpectedDependencyError("Unable to read organizer events."));
@@ -173,6 +184,7 @@ class PrismaEventRepository implements IEventRepository {
       const rows = await this.prisma.event.findMany({
         orderBy: { startDatetime: "asc" },
       });
+
       return Ok(rows.map(mapPrismaEventToRecord));
     } catch {
       return Err(UnexpectedDependencyError("Unable to list all events."));
@@ -189,6 +201,7 @@ class PrismaEventRepository implements IEventRepository {
           status: "confirmed",
         },
       });
+
       return Ok(count);
     } catch {
       return Err(UnexpectedDependencyError("Unable to read attendee counts."));
@@ -208,11 +221,13 @@ class PrismaEventRepository implements IEventRepository {
           updatedAt: new Date(updatedAt),
         },
       });
+
       return Ok(mapPrismaEventToRecord(row));
-    } catch (e) {
-      if (isRecordNotFound(e)) {
+    } catch (error) {
+      if (isRecordNotFound(error)) {
         return Ok(null);
       }
+
       return Err(UnexpectedDependencyError("Unable to update event status."));
     }
   }
@@ -225,6 +240,7 @@ class PrismaEventRepository implements IEventRepository {
         where: { status },
         orderBy: { startDatetime: "asc" },
       });
+
       return Ok(rows.map(mapPrismaEventToRecord));
     } catch {
       return Err(UnexpectedDependencyError("Unable to list events by status."));
@@ -245,6 +261,7 @@ class PrismaEventRepository implements IEventRepository {
           updatedAt: now,
         },
       });
+
       return Ok(result.count);
     } catch {
       return Err(
@@ -257,6 +274,7 @@ class PrismaEventRepository implements IEventRepository {
     event: IEventRecord,
   ): Promise<Result<IEventRecord, EventRepositoryError>> {
     const categoryResult = categoryStringToPrismaCategory(event.category);
+
     if (categoryResult.ok === false) {
       return categoryResult;
     }
@@ -277,6 +295,7 @@ class PrismaEventRepository implements IEventRepository {
           updatedAt: new Date(event.updatedAt),
         },
       });
+
       return Ok(mapPrismaEventToRecord(row));
     } catch {
       return Err(UnexpectedDependencyError("Unable to update event."));
