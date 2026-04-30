@@ -131,6 +131,12 @@ function buildUpdateEventData(
   };
 }
 
+function orderByStartDatetimeAscending() {
+  return {
+    startDatetime: "asc" as const,
+  };
+}
+
 function mapPrismaEventToRecord(row: PrismaEventRow): IEventRecord {
   return {
     id: row.id,
@@ -188,7 +194,7 @@ class PrismaEventRepository implements IEventRepository {
   async listEvents(): Promise<Result<IEventRecord[], EventRepositoryError>> {
     try {
       const rows = await this.prisma.event.findMany({
-        orderBy: { startDatetime: "asc" },
+        orderBy: orderByStartDatetimeAscending(),
       });
 
       return Ok(rows.map(mapPrismaEventToRecord));
@@ -203,7 +209,7 @@ class PrismaEventRepository implements IEventRepository {
     try {
       const rows = await this.prisma.event.findMany({
         where: { organizerId },
-        orderBy: { startDatetime: "asc" },
+        orderBy: orderByStartDatetimeAscending(),
       });
 
       return Ok(rows.map(mapPrismaEventToRecord));
@@ -215,7 +221,7 @@ class PrismaEventRepository implements IEventRepository {
   async listAll(): Promise<Result<IEventRecord[], EventRepositoryError>> {
     try {
       const rows = await this.prisma.event.findMany({
-        orderBy: { startDatetime: "asc" },
+        orderBy: orderByStartDatetimeAscending(),
       });
 
       return Ok(rows.map(mapPrismaEventToRecord));
@@ -271,7 +277,7 @@ class PrismaEventRepository implements IEventRepository {
     try {
       const rows = await this.prisma.event.findMany({
         where: { status },
-        orderBy: { startDatetime: "asc" },
+        orderBy: orderByStartDatetimeAscending(),
       });
 
       return Ok(rows.map(mapPrismaEventToRecord));
