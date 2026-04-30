@@ -3,6 +3,7 @@ import {
   getAuthenticatedUser,
   type AppSessionStore,
   type IAppBrowserSession,
+  type IAuthenticatedUserSession,
 } from "../session/AppSession";
 import type { ILoggingService } from "../service/LoggingService";
 import type {
@@ -27,6 +28,7 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
   createFromForm(
     req: Request,
     res: Response,
@@ -34,29 +36,34 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
   showOrganizerDashboard(
     res: Response,
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
   publishFromForm(
     res: Response,
     eventId: string,
     store: AppSessionStore,
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
+
   cancelFromForm(
     res: Response,
     eventId: string,
     store: AppSessionStore,
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void>;
+
   showEventDetail(
     res: Response,
     eventId: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
   showEditForm(
     res: Response,
     eventId: string,
@@ -89,6 +96,12 @@ class EventController implements IEventController {
 
   private isHtmxRequest(req: Request): boolean {
     return req.get("HX-Request") === "true";
+  }
+
+  private getCurrentUser(
+    store: AppSessionStore,
+  ): IAuthenticatedUserSession | null {
+    return getAuthenticatedUser(store);
   }
 
   private emptyCreateForm(): ICreateEventInput {
@@ -162,7 +175,8 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -184,7 +198,8 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
+
     if (!currentUser) {
       if (this.isHtmxRequest(req)) {
         res.status(401).render("events/partials/createEventResult", {
@@ -249,7 +264,8 @@ class EventController implements IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void> {
-    const currentUser = getAuthenticatedUser(store);
+    const currentUser = this.getCurrentUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -274,22 +290,22 @@ class EventController implements IEventController {
         return;
       }
 
-        this.renderError(res, status, result.value.message);
-        return;
-      }
+      this.renderError(res, status, result.value.message);
+      return;
+    }
 
-      const commentsResult = await this.commentService.listCommentsByEventId(
-        result.value.event.id,
-      );
-      const comments = commentsResult.ok ? commentsResult.value : [];
-  
-      res.render("events/detail", {
-        pageError: null,
-        session,
-        event: result.value.event,
-        attendeeCount: result.value.attendeeCount,
-        comments,
-      });
+    const commentsResult = await this.commentService.listCommentsByEventId(
+      result.value.event.id,
+    );
+    const comments = commentsResult.ok ? commentsResult.value : [];
+
+    res.render("events/detail", {
+      pageError: null,
+      session,
+      event: result.value.event,
+      attendeeCount: result.value.attendeeCount,
+      comments,
+    });
   }
 
   async showOrganizerDashboard(
@@ -298,6 +314,7 @@ class EventController implements IEventController {
     session: IAppBrowserSession,
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -349,6 +366,7 @@ class EventController implements IEventController {
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -375,6 +393,7 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Published event ${result.value.id}`);
+
     if (options?.isHtmx && options.viewSource === "detail") {
       res.render("events/partials/detail-status-actions", {
         layout: false,
@@ -383,12 +402,14 @@ class EventController implements IEventController {
       });
       return;
     }
+
     if (options?.isHtmx && options.viewSource === "dashboard") {
       const detailResult = await this.service.getEventById(
         result.value.id,
         currentUser.userId,
         currentUser.role,
       );
+
       if (detailResult.ok === false) {
         const status = this.mapErrorStatus(detailResult.value as GetEventError);
         res.status(status).render("partials/error", {
@@ -407,6 +428,7 @@ class EventController implements IEventController {
       });
       return;
     }
+
     res.status(200).send("Event published.");
   }
 
@@ -417,6 +439,7 @@ class EventController implements IEventController {
     options?: { isHtmx?: boolean; viewSource?: string },
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -443,6 +466,7 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Cancelled event ${result.value.id}`);
+
     if (options?.isHtmx && options.viewSource === "detail") {
       res.render("events/partials/detail-status-actions", {
         layout: false,
@@ -451,12 +475,14 @@ class EventController implements IEventController {
       });
       return;
     }
+
     if (options?.isHtmx && options.viewSource === "dashboard") {
       const detailResult = await this.service.getEventById(
         result.value.id,
         currentUser.userId,
         currentUser.role,
       );
+
       if (detailResult.ok === false) {
         const status = this.mapErrorStatus(detailResult.value as GetEventError);
         res.status(status).render("partials/error", {
@@ -475,8 +501,10 @@ class EventController implements IEventController {
       });
       return;
     }
+
     res.status(200).send("Event cancelled.");
   }
+
   async showEditForm(
     res: Response,
     eventId: string,
@@ -484,6 +512,7 @@ class EventController implements IEventController {
     session: IAppBrowserSession,
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -519,6 +548,7 @@ class EventController implements IEventController {
     session: IAppBrowserSession,
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
       res.status(401).render("partials/error", {
         message: "Please log in to continue.",
@@ -558,30 +588,33 @@ class EventController implements IEventController {
     session: IAppBrowserSession,
   ): Promise<void> {
     const currentUser = getAuthenticatedUser(store);
+
     if (!currentUser) {
-      res.status(401).render('partials/error', {
-        message: 'Please log in to continue.',
+      res.status(401).render("partials/error", {
+        message: "Please log in to continue.",
         layout: false,
       });
       return;
     }
- 
-    // Transition expired events on every load — non-fatal if it fails
-    const transitionResult = await this.service.transitionExpiredEvents(new Date());
+
+    const transitionResult = await this.service.transitionExpiredEvents(
+      new Date(),
+    );
+
     if (transitionResult.ok === false) {
       this.logger.error(
         `Archive: transition expired events failed: ${transitionResult.value.message}`,
       );
     }
- 
+
     const result = await this.service.getArchivedEvents(category);
- 
+
     if (result.ok === false) {
-      const status = result.value.name === 'InvalidFilterError' ? 400 : 500;
+      const status = result.value.name === "InvalidFilterError" ? 400 : 500;
       const log = status >= 500 ? this.logger.error : this.logger.warn;
       log.call(this.logger, `Load archive failed: ${result.value.message}`);
- 
-      res.status(status).render('events/archive', {
+
+      res.status(status).render("events/archive", {
         session,
         events: [],
         category,
@@ -589,8 +622,8 @@ class EventController implements IEventController {
       });
       return;
     }
- 
-    res.render('events/archive', {
+
+    res.render("events/archive", {
       session,
       events: result.value,
       category,
