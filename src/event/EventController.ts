@@ -104,6 +104,26 @@ class EventController implements IEventController {
     return getAuthenticatedUser(store);
   }
 
+  private renderLoginRequired(res: Response): void {
+    res.status(401).render("partials/error", {
+      message: "Please log in to continue.",
+      layout: false,
+    });
+  }
+
+  private renderCreateLoginRequired(req: Request, res: Response): void {
+    if (this.isHtmxRequest(req)) {
+      res.status(401).render("events/partials/createEventResult", {
+        successMessage: null,
+        errorMessage: "Please log in to continue.",
+        layout: false,
+      });
+      return;
+    }
+
+    this.renderLoginRequired(res);
+  }
+
   private emptyCreateForm(): ICreateEventInput {
     return {
       title: "",
@@ -178,10 +198,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -201,19 +218,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      if (this.isHtmxRequest(req)) {
-        res.status(401).render("events/partials/createEventResult", {
-          successMessage: null,
-          errorMessage: "Please log in to continue.",
-          layout: false,
-        });
-        return;
-      }
-
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderCreateLoginRequired(req, res);
       return;
     }
 
@@ -267,10 +272,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -316,10 +318,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -368,10 +367,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -441,10 +437,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -514,10 +507,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -550,10 +540,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
@@ -590,10 +577,7 @@ class EventController implements IEventController {
     const currentUser = this.getCurrentUser(store);
 
     if (!currentUser) {
-      res.status(401).render("partials/error", {
-        message: "Please log in to continue.",
-        layout: false,
-      });
+      this.renderLoginRequired(res);
       return;
     }
 
