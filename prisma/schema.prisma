@@ -6,14 +6,64 @@ datasource db {
   provider = "sqlite"
 }
 
-// TODO: Define your project's data models here.
-// Example:
-//
-// model Item {
-//   id        Int      @id @default(autoincrement())
-//   title     String
-//   body      String
-//   status    String   @default("active")
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+enum EventStatus {
+  draft
+  published
+  cancelled
+  past
+}
+
+enum EventCategory {
+  social
+  educational
+  volunteer
+  sports
+  arts
+}
+
+enum RsvpStatus {
+  confirmed
+  waitlisted    
+  cancelled
+}
+
+model Event {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  location      String
+  category      EventCategory
+  capacity      Int?                       // null = no limit
+  status        EventStatus   @default(draft)
+  startDatetime DateTime
+  endDatetime   DateTime
+  organizerId   String                     // auth-managed user — no FK
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  rsvps         Rsvp[]
+  comments      Comment[]
+}
+
+model Rsvp {
+  id        String     @id @default(cuid())
+  eventId   String
+  userId    String                        // auth-managed user — no FK
+  status    RsvpStatus
+  createdAt DateTime   @default(now())   // deterministic waitlist ordering
+
+  event     Event      @relation(fields: [eventId], references: [id])
+
+  @@unique([eventId, userId])            // one RSVP per member per event
+}
+
+model Comment{
+  id        String     @id @default(cuid())
+  eventId   String
+  userId    String                        
+  body      String
+  createdAt DateTime   @default(now())   
+
+  event Event @relation(fields: [eventId], references: [id])
+  
+}

@@ -117,7 +117,12 @@ class AuthController implements IAuthController {
 
     const nextSession = signInAuthenticatedUser(store, result.value);
     this.logger.info(`Authenticated ${nextSession.authenticatedUser?.email ?? "unknown user"}`);
-    res.redirect("/");
+    const role = nextSession.authenticatedUser?.role;
+    if (role === "admin" || role === "staff") {
+      res.redirect("/organizer/dashboard");
+      return;
+    }
+    res.redirect("/home");
   }
 
   async logoutFromForm(res: Response, store: AppSessionStore): Promise<void> {

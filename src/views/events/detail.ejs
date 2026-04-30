@@ -1,0 +1,109 @@
+<% if (pageError) { %>
+  <%- include("../partials/error", { message: pageError }) %>
+<% } %>
+
+<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+  <div>
+    <p class="text-sm font-medium uppercase tracking-wide text-blue-600 mb-2">
+      Event Detail
+    </p>
+    <h1 class="text-3xl font-bold text-slate-900 mb-3"><%= event.title %></h1>
+    <p class="text-slate-600 max-w-3xl"><%= event.description %></p>
+  </div>
+</section>
+
+<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg mb-5">
+  <h2 class="text-xl font-semibold text-slate-900 mb-4">Event Information</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Location</p>
+      <p class="font-medium text-slate-800"><%= event.location %></p>
+    </div>
+
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Category</p>
+      <p class="font-medium text-slate-800"><%= event.category %></p>
+    </div>
+
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Organizer ID</p>
+      <p class="font-medium text-slate-800"><%= event.organizerId %></p>
+    </div>
+
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Attendance</p>
+      <% if (event.capacity === null) { %>
+        <p class="font-medium text-slate-800"><%= attendeeCount %> / No limit</p>
+      <% } else { %>
+        <p class="font-medium text-slate-800"><%= attendeeCount %> / <%= event.capacity %></p>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg mb-5">
+  <h2 class="text-xl font-semibold text-slate-900 mb-4">Schedule</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Starts</p>
+      <p class="font-medium text-slate-800"><%= event.startDatetime %></p>
+    </div>
+
+    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+      <p class="text-sm text-slate-500 mb-1">Ends</p>
+      <p class="font-medium text-slate-800"><%= event.endDatetime %></p>
+    </div>
+  </div>
+</section>
+
+<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+  <h2 class="text-xl font-semibold text-slate-900 mb-4">Actions</h2>
+
+  <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === event.organizerId) { %>
+    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      
+      <a href="/events/<%= event.id %>/edit"
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-medium hover:bg-blue-700"
+      >
+        Edit Event
+      </a>
+
+      <% if (event.status === "published") { %>
+        <form method="post" action="/events/<%= event.id %>/cancel" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-sm font-medium hover:bg-red-50"
+          >
+            Cancel Event
+          </button>
+        </form>
+      <% } %>
+
+      <% if (event.status === "draft") { %>
+        <form method="post" action="/events/<%= event.id %>/publish" class="m-0">
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-green-600 text-white border border-green-600 cursor-pointer text-sm font-medium hover:bg-green-700"
+          >
+            Publish Event
+          </button>
+        </form>
+      <% } %>
+    </div>
+  <% } else { %>
+    <p class="text-slate-500 mb-4">Member action</p>
+    <div class="flex items-center gap-3 flex-wrap">
+      <button
+        type="button"
+        disabled
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
+      >
+        RSVP
+      </button>
+    </div>
+  <% } %>
+</section>
+<%- include("partials/comments", { comments, eventId: event.id, session }) %>

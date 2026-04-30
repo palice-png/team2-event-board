@@ -1,0 +1,32 @@
+<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+  <h1 class="text-3xl font-bold text-slate-900 mb-3">Organizer dashboard</h1>
+  <p class="text-slate-500 mb-0">
+    Your events grouped by status. Attendee counts include only RSVPs marked as going.
+  </p>
+</section>
+
+<% if (pageError) { %>
+  <%- include("../partials/error", { message: pageError }) %>
+<% } %>
+
+<% const sections = [
+  { key: "published", label: "Published" },
+  { key: "draft", label: "Draft" },
+  { key: "cancelledOrPast", label: "Cancelled or past" },
+]; %>
+
+<% sections.forEach(function (section) { %>
+  <section class="max-w-3xl mb-5 p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
+    <h2 class="text-xl font-semibold mb-4 text-slate-900"><%= section.label %></h2>
+    <% const items = dashboard[section.key]; %>
+    <% if (!items || items.length === 0) { %>
+      <p class="text-slate-500 mb-0">No events in this section.</p>
+    <% } else { %>
+      <ul class="list-none p-0 m-0 space-y-4">
+        <% items.forEach(function (row) { %>
+          <%- include("partials/dashboard-row", { row }) %>
+        <% }); %>
+      </ul>
+    <% } %>
+  </section>
+<% }); %>
