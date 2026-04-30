@@ -22,6 +22,10 @@ function UnexpectedDependencyError(message: string): EventRepositoryError {
   };
 }
 
+function createEventId(): string {
+  return randomUUID();
+}
+
 const PRISMA_CATEGORY_VALUES = new Set<string>(
   Object.values(PrismaEventCategoryConst) as string[],
 );
@@ -85,6 +89,48 @@ function isRecordNotFound(error: unknown): boolean {
   );
 }
 
+function isoStringToDate(value: string): Date {
+  return new Date(value);
+}
+
+function buildCreateEventData(
+  input: ICreateEventRecordInput,
+  category: PrismaEventCategory,
+) {
+  return {
+    id: createEventId(),
+    title: input.title,
+    description: input.description,
+    location: input.location,
+    category,
+    status: input.status,
+    capacity: input.capacity,
+    startDatetime: isoStringToDate(input.startDatetime),
+    endDatetime: isoStringToDate(input.endDatetime),
+    organizerId: input.organizerId,
+    createdAt: isoStringToDate(input.createdAt),
+    updatedAt: isoStringToDate(input.updatedAt),
+  };
+}
+
+function buildUpdateEventData(
+  event: IEventRecord,
+  category: PrismaEventCategory,
+) {
+  return {
+    title: event.title,
+    description: event.description,
+    location: event.location,
+    category,
+    capacity: event.capacity,
+    status: event.status,
+    startDatetime: isoStringToDate(event.startDatetime),
+    endDatetime: isoStringToDate(event.endDatetime),
+    organizerId: event.organizerId,
+    updatedAt: isoStringToDate(event.updatedAt),
+  };
+}
+
 function mapPrismaEventToRecord(row: PrismaEventRow): IEventRecord {
   return {
     id: row.id,
@@ -116,20 +162,7 @@ class PrismaEventRepository implements IEventRepository {
 
     try {
       const row = await this.prisma.event.create({
-        data: {
-          id: randomUUID(),
-          title: input.title,
-          description: input.description,
-          location: input.location,
-          category: categoryResult.value,
-          status: input.status,
-          capacity: input.capacity,
-          startDatetime: new Date(input.startDatetime),
-          endDatetime: new Date(input.endDatetime),
-          organizerId: input.organizerId,
-          createdAt: new Date(input.createdAt),
-          updatedAt: new Date(input.updatedAt),
-        },
+        data: buildCreateEventData(input, categoryResult.value),
       });
 
       return Ok(mapPrismaEventToRecord(row));
@@ -218,7 +251,7 @@ class PrismaEventRepository implements IEventRepository {
         where: { id: eventId },
         data: {
           status,
-          updatedAt: new Date(updatedAt),
+          updatedAt: isoStringToDate(updatedAt),
         },
       });
 
@@ -282,18 +315,7 @@ class PrismaEventRepository implements IEventRepository {
     try {
       const row = await this.prisma.event.update({
         where: { id: event.id },
-        data: {
-          title: event.title,
-          description: event.description,
-          location: event.location,
-          category: categoryResult.value,
-          capacity: event.capacity,
-          status: event.status,
-          startDatetime: new Date(event.startDatetime),
-          endDatetime: new Date(event.endDatetime),
-          organizerId: event.organizerId,
-          updatedAt: new Date(event.updatedAt),
-        },
+        data: buildUpdateEventData(event, categoryResult.value),
       });
 
       return Ok(mapPrismaEventToRecord(row));
