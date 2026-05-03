@@ -68,12 +68,44 @@
           class="m-0 w-full sm:w-auto sm:flex-1 sm:min-w-[10rem] md:max-w-xs lg:max-w-sm"
         >
           <input type="hidden" name="viewSource" value="detail" />
-          <button
-            type="submit"
-            class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Publish Event
-          </button>
+          <div class="w-full" x-data="{ confirm: false }">
+            <div x-show="!confirm" x-transition.opacity.duration.150ms>
+              <button
+                type="button"
+                class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                x-on:click="confirm = true"
+              >
+                Publish Event
+              </button>
+            </div>
+            <div
+              x-show="confirm"
+              x-transition.opacity.duration.150ms
+              class="space-y-2 rounded-lg border border-blue-200 bg-blue-50/90 p-3 shadow-sm sm:p-4"
+              style="display: none"
+              role="region"
+              aria-label="Confirm publish"
+            >
+              <p class="text-xs font-medium text-slate-700 sm:text-sm">
+                Publish this draft? It will become visible to members.
+              </p>
+              <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                  x-on:click="confirm = false"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  class="w-full rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                >
+                  Yes, publish
+                </button>
+              </div>
+            </div>
+          </div>
         </form>
       <% } %>
 
@@ -87,12 +119,44 @@
           class="m-0 w-full sm:w-auto sm:flex-1 sm:min-w-[10rem] md:max-w-xs lg:max-w-sm"
         >
           <input type="hidden" name="viewSource" value="detail" />
-          <button
-            type="submit"
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
-          >
-            Cancel Event
-          </button>
+          <div class="w-full" x-data="{ confirm: false }">
+            <div x-show="!confirm" x-transition.opacity.duration.150ms>
+              <button
+                type="button"
+                class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
+                x-on:click="confirm = true"
+              >
+                Cancel Event
+              </button>
+            </div>
+            <div
+              x-show="confirm"
+              x-transition.opacity.duration.150ms
+              class="space-y-2 rounded-lg border border-rose-200 bg-rose-50/90 p-3 shadow-sm sm:p-4"
+              style="display: none"
+              role="region"
+              aria-label="Confirm cancel"
+            >
+              <p class="text-xs font-medium text-slate-700 sm:text-sm">
+                Cancel this event? Members will no longer see it as published.
+              </p>
+              <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                  x-on:click="confirm = false"
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  class="w-full rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-800 shadow-sm hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 sm:w-auto sm:text-sm"
+                >
+                  Yes, cancel
+                </button>
+              </div>
+            </div>
+          </div>
         </form>
       <% } %>
 
