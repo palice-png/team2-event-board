@@ -1,6 +1,12 @@
-<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
-  <h1 class="text-3xl font-bold text-slate-900 mb-3">Organizer dashboard</h1>
-  <p class="text-slate-500 mb-0">
+<section
+  class="mb-6 sm:mb-8 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/80 to-blue-50/30 p-5 shadow-lg sm:p-6 md:p-8 lg:rounded-3xl"
+>
+  <h1
+    class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:mb-4"
+  >
+    Organizer dashboard
+  </h1>
+  <p class="max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base md:text-lg">
     Your events grouped by status. Attendee counts include only RSVPs marked as going.
   </p>
 </section>
@@ -15,18 +21,28 @@
   { key: "cancelledOrPast", label: "Cancelled or past" },
 ]; %>
 
-<% sections.forEach(function (section) { %>
-  <section class="max-w-3xl mb-5 p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
-    <h2 class="text-xl font-semibold mb-4 text-slate-900"><%= section.label %></h2>
-    <% const items = dashboard[section.key]; %>
-    <% if (!items || items.length === 0) { %>
-      <p class="text-slate-500 mb-0">No events in this section.</p>
-    <% } else { %>
-      <ul class="list-none p-0 m-0 space-y-4">
-        <% items.forEach(function (row) { %>
-          <%- include("partials/dashboard-row", { row }) %>
-        <% }); %>
-      </ul>
-    <% } %>
-  </section>
-<% }); %>
+<div class="mx-auto flex max-w-3xl flex-col gap-5 sm:gap-6 md:max-w-4xl lg:max-w-5xl lg:gap-8">
+  <% sections.forEach(function (section) { %>
+    <section
+      class="rounded-2xl border border-slate-200 bg-white p-4 shadow-md sm:p-6 md:rounded-3xl md:p-7 lg:p-8"
+    >
+      <div class="mb-4 flex flex-col gap-1 border-b border-slate-100 pb-4 sm:mb-5 sm:flex-row sm:items-end sm:justify-between sm:pb-5">
+        <h2 class="text-lg font-semibold text-slate-900 sm:text-xl md:text-2xl">
+          <%= section.label %>
+        </h2>
+      </div>
+      <% const items = dashboard[section.key]; %>
+      <% if (!items || items.length === 0) { %>
+        <p class="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-6 text-center text-sm text-slate-500 sm:py-8 sm:text-base">
+          No events in this section.
+        </p>
+      <% } else { %>
+        <ul class="m-0 list-none space-y-3 p-0 sm:space-y-4 md:space-y-5">
+          <% items.forEach(function (row) { %>
+            <%- include("partials/dashboard-row", { row }) %>
+          <% }); %>
+        </ul>
+      <% } %>
+    </section>
+  <% }); %>
+</div>

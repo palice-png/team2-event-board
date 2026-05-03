@@ -1,71 +1,127 @@
 <% const ev = row.event; %>
-<li id="dashboard-row-<%= ev.id %>" class="p-4 border border-slate-200 rounded-xl bg-slate-50/50">
-  <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-    <div>
-      <div class="mb-2">
-        <h3 class="text-lg font-semibold mb-1">
-          <a
-            href="/events/<%= ev.id %>"
-            class="text-blue-700 font-semibold no-underline hover:underline transition"
-          >
-            <%= ev.title %>
-          </a>
-        </h3>
-        <p class="text-sm text-slate-500">Open the full event detail page</p>
+<% const statusMeta = {
+  draft: {
+    label: "Draft",
+    badge:
+      "bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-200/80",
+  },
+  published: {
+    label: "Published",
+    badge:
+      "bg-emerald-50 text-emerald-900 ring-1 ring-inset ring-emerald-200/80",
+  },
+  cancelled: {
+    label: "Cancelled",
+    badge: "bg-rose-50 text-rose-900 ring-1 ring-inset ring-rose-200/80",
+  },
+  past: {
+    label: "Past",
+    badge: "bg-slate-100 text-slate-800 ring-1 ring-inset ring-slate-200/80",
+  },
+}; %>
+<% const badge = statusMeta[ev.status] || { label: ev.status, badge: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200" }; %>
+<li
+  id="dashboard-row-<%= ev.id %>"
+  class="group rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 md:p-6"
+>
+  <div
+    class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6"
+  >
+    <div class="min-w-0 flex-1 space-y-3 sm:space-y-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div class="min-w-0">
+          <h3 class="text-base font-semibold leading-snug text-slate-900 sm:text-lg md:text-xl">
+            <a
+              href="/events/<%= ev.id %>"
+              class="text-blue-700 underline-offset-2 transition hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-sm"
+            >
+              <%= ev.title %>
+            </a>
+          </h3>
+          <p class="mt-1 text-xs text-slate-500 sm:text-sm">
+            Open the full event detail page
+          </p>
+        </div>
+        <span
+          class="inline-flex w-fit shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide sm:px-3 sm:text-xs <%= badge.badge %>"
+          aria-label="Event status: <%= badge.label %>"
+        >
+          <%= badge.label %>
+        </span>
       </div>
 
-      <p class="text-sm text-slate-600 mb-1">
-        <strong class="text-slate-700">Date:</strong> <%= ev.startDatetime %>
-      </p>
-      <p class="text-sm text-slate-600 mb-1">
-        <strong class="text-slate-700">Category:</strong> <%= ev.category %>
-      </p>
-      <p class="text-sm text-slate-600 mb-0">
-        <strong class="text-slate-700">Attending:</strong>
-        <% if (typeof ev.capacity === "number") { %>
-          <%= row.attendeeCount %> / <%= ev.capacity %>
-        <% } else { %>
-          <%= row.attendeeCount %> (no capacity limit)
+      <dl
+        class="grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-2 sm:text-sm lg:grid-cols-3 lg:gap-4"
+      >
+        <div class="rounded-lg bg-slate-50/80 px-3 py-2 ring-1 ring-slate-100 sm:px-4 sm:py-2.5">
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Date
+          </dt>
+          <dd class="mt-0.5 font-medium text-slate-800"><%= ev.startDatetime %></dd>
+        </div>
+        <div class="rounded-lg bg-slate-50/80 px-3 py-2 ring-1 ring-slate-100 sm:px-4 sm:py-2.5">
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Category
+          </dt>
+          <dd class="mt-0.5 font-medium text-slate-800"><%= ev.category %></dd>
+        </div>
+        <div class="rounded-lg bg-slate-50/80 px-3 py-2 ring-1 ring-slate-100 sm:col-span-2 sm:px-4 sm:py-2.5 lg:col-span-1">
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Attending
+          </dt>
+          <dd class="mt-0.5 font-medium text-slate-800">
+            <% if (typeof ev.capacity === "number") { %>
+              <%= row.attendeeCount %> / <%= ev.capacity %>
+            <% } else { %>
+              <%= row.attendeeCount %>
+              <span class="font-normal text-slate-500">(no capacity limit)</span>
+            <% } %>
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <% if (ev.status === "draft" || ev.status === "published") { %>
+      <div
+        class="flex shrink-0 flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-end sm:border-t-0 sm:pt-0 lg:flex-col lg:items-stretch lg:border-t-0 lg:pt-0 lg:min-w-[9.5rem]"
+      >
+        <% if (ev.status === "draft") { %>
+          <form
+            method="post"
+            action="/events/<%= ev.id %>/publish"
+            hx-post="/events/<%= ev.id %>/publish"
+            hx-target="#dashboard-row-<%= ev.id %>"
+            hx-swap="outerHTML"
+            class="m-0 w-full sm:w-auto lg:w-full"
+          >
+            <input type="hidden" name="viewSource" value="dashboard" />
+            <button
+              type="submit"
+              class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto lg:w-full"
+            >
+              Publish
+            </button>
+          </form>
         <% } %>
-      </p>
-    </div>
-    <div class="flex flex-col gap-2 shrink-0">
-      <% if (ev.status === "draft") { %>
-        <form
-          method="post"
-          action="/events/<%= ev.id %>/publish"
-          hx-post="/events/<%= ev.id %>/publish"
-          hx-target="#dashboard-row-<%= ev.id %>"
-          hx-swap="outerHTML"
-          class="m-0"
-        >
-          <input type="hidden" name="viewSource" value="dashboard" />
-          <button
-            type="submit"
-            class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700"
+        <% if (ev.status === "published") { %>
+          <form
+            method="post"
+            action="/events/<%= ev.id %>/cancel"
+            hx-post="/events/<%= ev.id %>/cancel"
+            hx-target="#dashboard-row-<%= ev.id %>"
+            hx-swap="outerHTML"
+            class="m-0 w-full sm:w-auto lg:w-full"
           >
-            Publish
-          </button>
-        </form>
-      <% } %>
-      <% if (ev.status === "published") { %>
-        <form
-          method="post"
-          action="/events/<%= ev.id %>/cancel"
-          hx-post="/events/<%= ev.id %>/cancel"
-          hx-target="#dashboard-row-<%= ev.id %>"
-          hx-swap="outerHTML"
-          class="m-0"
-        >
-          <input type="hidden" name="viewSource" value="dashboard" />
-          <button
-            type="submit"
-            class="px-3 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium cursor-pointer hover:bg-slate-800"
-          >
-            Cancel
-          </button>
-        </form>
-      <% } %>
-    </div>
+            <input type="hidden" name="viewSource" value="dashboard" />
+            <button
+              type="submit"
+              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto lg:w-full"
+            >
+              Cancel
+            </button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
   </div>
 </li>
