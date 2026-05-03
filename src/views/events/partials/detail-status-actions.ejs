@@ -1,15 +1,63 @@
-<section id="detail-status-actions" class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
-  <div class="flex items-start justify-between gap-4 flex-wrap mb-4">
-    <h2 class="text-xl font-semibold text-slate-900">Actions</h2>
-    <div class="px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 shadow-sm min-w-[220px]">
-      <p class="text-sm text-slate-500 mb-1">Status</p>
-      <p class="text-base font-semibold text-slate-800"><%= event.status %></p>
+<% const statusMeta = {
+  draft: {
+    label: "Draft",
+    badge:
+      "bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-200/80",
+  },
+  published: {
+    label: "Published",
+    badge:
+      "bg-emerald-50 text-emerald-900 ring-1 ring-inset ring-emerald-200/80",
+  },
+  cancelled: {
+    label: "Cancelled",
+    badge: "bg-rose-50 text-rose-900 ring-1 ring-inset ring-rose-200/80",
+  },
+  past: {
+    label: "Past",
+    badge: "bg-slate-100 text-slate-800 ring-1 ring-inset ring-slate-200/80",
+  },
+}; %>
+<% const badge = statusMeta[event.status] || { label: event.status, badge: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200" }; %>
+<section
+  id="detail-status-actions"
+  class="mx-auto mb-5 max-w-4xl rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 p-4 shadow-md sm:mb-6 sm:p-5 md:rounded-3xl md:p-6 lg:mb-8 lg:p-8"
+>
+  <div
+    class="mb-4 flex flex-col gap-4 border-b border-slate-100 pb-4 sm:mb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:pb-5 lg:items-center"
+  >
+    <h2 class="text-lg font-semibold text-slate-900 sm:text-xl md:text-2xl">
+      Actions
+    </h2>
+    <div
+      class="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[200px] sm:max-w-xs md:min-w-[220px] lg:max-w-sm"
+    >
+      <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+        Status
+      </p>
+      <span
+        class="inline-flex w-fit items-center rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide <%= badge.badge %>"
+        aria-label="Event status: <%= badge.label %>"
+      >
+        <%= badge.label %>
+      </span>
     </div>
   </div>
 
   <% if (actingUser?.role === "admin" || actingUser?.userId === event.organizerId) { %>
-    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
-    <div class="flex items-center gap-3 flex-wrap">
+    <p class="mb-3 text-sm text-slate-600 sm:mb-4 sm:text-base">
+      Organizer/Admin controls
+    </p>
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-stretch md:items-center md:gap-4"
+    >
+      <a
+        href="/events/<%= event.id %>/edit"
+        class="inline-flex w-full items-center justify-center rounded-lg border border-blue-600 bg-white px-4 py-2.5 text-center text-sm font-semibold text-blue-700 shadow-sm transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto sm:min-w-[10rem] md:min-w-[11rem]"
+      >
+        Edit Event
+      </a>
+
       <% if (event.status === "draft") { %>
         <form
           method="post"
@@ -17,12 +65,12 @@
           hx-post="/events/<%= event.id %>/publish"
           hx-target="#detail-status-actions"
           hx-swap="outerHTML"
-          class="m-0"
+          class="m-0 w-full sm:w-auto sm:flex-1 sm:min-w-[10rem] md:max-w-xs lg:max-w-sm"
         >
           <input type="hidden" name="viewSource" value="detail" />
           <button
             type="submit"
-            class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium cursor-pointer hover:bg-blue-700"
+            class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Publish Event
           </button>
@@ -36,12 +84,12 @@
           hx-post="/events/<%= event.id %>/cancel"
           hx-target="#detail-status-actions"
           hx-swap="outerHTML"
-          class="m-0"
+          class="m-0 w-full sm:w-auto sm:flex-1 sm:min-w-[10rem] md:max-w-xs lg:max-w-sm"
         >
           <input type="hidden" name="viewSource" value="detail" />
           <button
             type="submit"
-            class="px-4 py-2 rounded-lg bg-slate-700 text-white text-sm font-medium cursor-pointer hover:bg-slate-800"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
           >
             Cancel Event
           </button>
@@ -49,16 +97,18 @@
       <% } %>
 
       <% if (event.status === "cancelled" || event.status === "past") { %>
-        <p class="text-slate-500 mb-0">No lifecycle actions available for this event.</p>
+        <p class="text-sm text-slate-500 sm:text-base mb-0 w-full sm:flex-[1_1_100%]">
+          No lifecycle actions available for this event.
+        </p>
       <% } %>
     </div>
   <% } else { %>
-    <p class="text-slate-500 mb-4">Member action</p>
-    <div class="flex items-center gap-3 flex-wrap">
+    <p class="mb-3 text-sm text-slate-600 sm:mb-4 sm:text-base">Member action</p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
       <button
         type="button"
         disabled
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
+        class="w-full cursor-not-allowed rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white opacity-60 shadow-sm sm:w-auto sm:min-w-[10rem] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
       >
         RSVP
       </button>
