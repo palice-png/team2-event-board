@@ -2,108 +2,93 @@
   <%- include("../partials/error", { message: pageError }) %>
 <% } %>
 
-<section class="mb-5 p-6 border border-slate-200 rounded-2xl bg-gradient-to-b from-white to-slate-50 shadow-lg">
+<section
+  class="mb-5 rounded-2xl border border-slate-200/80 bg-gradient-to-br from-white via-slate-50/80 to-blue-50/30 p-5 shadow-lg sm:mb-6 sm:p-6 md:p-8 lg:mb-8 lg:rounded-3xl"
+>
   <div>
-    <p class="text-sm font-medium uppercase tracking-wide text-blue-600 mb-2">
+    <p
+      class="mb-2 text-xs font-medium uppercase tracking-wide text-blue-600 sm:text-sm"
+    >
       Event Detail
     </p>
-    <h1 class="text-3xl font-bold text-slate-900 mb-3"><%= event.title %></h1>
-    <p class="text-slate-600 max-w-3xl"><%= event.description %></p>
+    <h1
+      class="mb-3 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl md:text-4xl"
+    >
+      <%= event.title %>
+    </h1>
+    <p class="max-w-3xl text-sm leading-relaxed text-slate-600 sm:text-base md:text-lg">
+      <%= event.description %>
+    </p>
   </div>
 </section>
 
-<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg mb-5">
-  <h2 class="text-xl font-semibold text-slate-900 mb-4">Event Information</h2>
+<section
+  class="mx-auto mb-5 max-w-4xl rounded-2xl border border-slate-200 bg-white p-4 shadow-md sm:mb-6 sm:p-6 md:rounded-3xl md:p-7 lg:p-8"
+>
+  <h2 class="mb-4 text-lg font-semibold text-slate-900 sm:mb-5 sm:text-xl md:text-2xl">
+    Event Information
+  </h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Location</p>
-      <p class="font-medium text-slate-800"><%= event.location %></p>
+  <div
+    class="grid grid-cols-1 gap-3 text-slate-700 sm:grid-cols-2 sm:gap-4 md:gap-5 lg:grid-cols-2"
+  >
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Location
+      </p>
+      <p class="font-medium text-slate-800 sm:text-base"><%= event.location %></p>
     </div>
 
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Category</p>
-      <p class="font-medium text-slate-800"><%= event.category %></p>
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Category
+      </p>
+      <p class="font-medium text-slate-800 sm:text-base"><%= event.category %></p>
     </div>
 
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Organizer ID</p>
-      <p class="font-medium text-slate-800"><%= event.organizerId %></p>
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Organizer ID
+      </p>
+      <p class="break-all font-medium text-slate-800 sm:text-base"><%= event.organizerId %></p>
     </div>
 
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Attendance</p>
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Attendance
+      </p>
       <% if (event.capacity === null) { %>
-        <p class="font-medium text-slate-800"><%= attendeeCount %> / No limit</p>
+        <p class="font-medium text-slate-800 sm:text-base"><%= attendeeCount %> / No limit</p>
       <% } else { %>
-        <p class="font-medium text-slate-800"><%= attendeeCount %> / <%= event.capacity %></p>
+        <p class="font-medium text-slate-800 sm:text-base"><%= attendeeCount %> / <%= event.capacity %></p>
       <% } %>
     </div>
   </div>
 </section>
 
-<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg mb-5">
-  <h2 class="text-xl font-semibold text-slate-900 mb-4">Schedule</h2>
+<section
+  class="mx-auto mb-5 max-w-4xl rounded-2xl border border-slate-200 bg-white p-4 shadow-md sm:mb-6 sm:p-6 md:rounded-3xl md:p-7 lg:p-8"
+>
+  <h2 class="mb-4 text-lg font-semibold text-slate-900 sm:mb-5 sm:text-xl md:text-2xl">
+    Schedule
+  </h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-700">
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Starts</p>
-      <p class="font-medium text-slate-800"><%= event.startDatetime %></p>
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5">
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Starts
+      </p>
+      <p class="font-medium text-slate-800 sm:text-base"><%= event.startDatetime %></p>
     </div>
 
-    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-      <p class="text-sm text-slate-500 mb-1">Ends</p>
-      <p class="font-medium text-slate-800"><%= event.endDatetime %></p>
+    <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
+      <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+        Ends
+      </p>
+      <p class="font-medium text-slate-800 sm:text-base"><%= event.endDatetime %></p>
     </div>
   </div>
 </section>
 
-<section class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
-  <h2 class="text-xl font-semibold text-slate-900 mb-4">Actions</h2>
-
-  <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === event.organizerId) { %>
-    <p class="text-slate-500 mb-4">Organizer/Admin controls</p>
-    <div class="flex items-center gap-3 flex-wrap">
-      
-      <a href="/events/<%= event.id %>/edit"
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-600 text-sm font-medium hover:bg-blue-700"
-      >
-        Edit Event
-      </a>
-
-      <% if (event.status === "published") { %>
-        <form method="post" action="/events/<%= event.id %>/cancel" class="m-0">
-          <button
-            type="submit"
-            class="px-4 py-2 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-sm font-medium hover:bg-red-50"
-          >
-            Cancel Event
-          </button>
-        </form>
-      <% } %>
-
-      <% if (event.status === "draft") { %>
-        <form method="post" action="/events/<%= event.id %>/publish" class="m-0">
-          <button
-            type="submit"
-            class="px-4 py-2 rounded-lg bg-green-600 text-white border border-green-600 cursor-pointer text-sm font-medium hover:bg-green-700"
-          >
-            Publish Event
-          </button>
-        </form>
-      <% } %>
-    </div>
-  <% } else { %>
-    <p class="text-slate-500 mb-4">Member action</p>
-    <div class="flex items-center gap-3 flex-wrap">
-      <button
-        type="button"
-        disabled
-        class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium cursor-not-allowed opacity-60 text-sm"
-      >
-        RSVP
-      </button>
-    </div>
-  <% } %>
-</section>
+<%- include("partials/detail-status-actions", { event, actingUser: session.authenticatedUser }) %>
 <%- include("partials/comments", { comments, eventId: event.id, session }) %>
