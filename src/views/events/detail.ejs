@@ -92,13 +92,18 @@
     Schedule
   </h2>
 
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5">
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5">
     <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
       <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
         Starts
       </p>
-      <p class="font-medium text-slate-800 sm:text-base"><%= event.startDatetime %></p>
-      <p class="mt-2 text-sm font-medium text-blue-700">
+      <time
+        datetime="<%= event.startDatetime %>"
+        class="block text-base font-semibold text-slate-900 sm:text-lg"
+      >
+        <%= new Date(event.startDatetime).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) %>
+      </time>
+      <p class="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-100">
         <span x-text='relativeTime(<%- JSON.stringify(event.startDatetime) %>)'></span>
       </p>
     </div>
@@ -107,8 +112,13 @@
       <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
         Ends
       </p>
-      <p class="font-medium text-slate-800 sm:text-base"><%= event.endDatetime %></p>
-      <p class="mt-2 text-sm font-medium text-slate-600">
+      <time
+        datetime="<%= event.endDatetime %>"
+        class="block text-base font-semibold text-slate-900 sm:text-lg"
+      >
+        <%= new Date(event.endDatetime).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) %>
+      </time>
+      <p class="mt-3 inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">
         <span x-text='relativeTime(<%- JSON.stringify(event.endDatetime) %>)'></span>
       </p>
     </div>
