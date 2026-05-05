@@ -68,6 +68,25 @@
 
 <section
   class="mx-auto mb-5 max-w-4xl rounded-2xl border border-slate-200 bg-white p-4 shadow-md sm:mb-6 sm:p-6 md:rounded-3xl md:p-7 lg:p-8"
+  x-data='{
+    relativeTime(iso) {
+      const target = new Date(iso);
+      if (Number.isNaN(target.getTime())) return "";
+
+      const diffMs = target.getTime() - Date.now();
+      const absMs = Math.abs(diffMs);
+      const minute = 60 * 1000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+      const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+      if (absMs < minute) return "now";
+      if (absMs < hour) return formatter.format(Math.round(diffMs / minute), "minute");
+      if (absMs < day) return formatter.format(Math.round(diffMs / hour), "hour");
+
+      return formatter.format(Math.round(diffMs / day), "day");
+    }
+  }'
 >
   <h2 class="mb-4 text-lg font-semibold text-slate-900 sm:mb-5 sm:text-xl md:text-2xl">
     Schedule
