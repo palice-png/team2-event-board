@@ -3,12 +3,31 @@ import type { UserRole } from "../auth/User";
 import type { ICommentRecord, ICommentRepository } from "./CommentRepository";
 import type { IUserRepository } from "../auth/UserRepository";
 
-export type CommentSummary = ICommentRecord;
+export type CommentSummary = ICommentRecord & {displayName: string };
+
+export type ValidationError = { name: "ValidationError"; message: string };
+export type UnauthorizedError = { name: "UnauthorizedError"; message: string };
+export type CommentNotFoundError = { name: "CommentNotFoundError"; message: string };
 
 export type CommentError =
   | { name: "ValidationError"; message: string }
   | { name: "UnauthorizedError"; message: string }
   | { name: "CommentNotFoundError"; message: string };
+
+export const ValidationError = (message: string): ValidationError => ({
+  name: "ValidationError",
+  message,
+});
+  
+export const UnauthorizedError = (message: string): UnauthorizedError => ({
+  name: "UnauthorizedError",
+  message,
+});
+  
+export const CommentNotFoundError = (message: string): CommentNotFoundError => ({
+  name: "CommentNotFoundError",
+  message,
+});
 
 export interface ICommentService {
   createComment(
@@ -61,7 +80,13 @@ class CommentService implements ICommentService {
 
     await this.repo.create(comment);
 
-    return Ok(comment);
+    const userResult = await this.users.findById(actingUserId);
+    const displayName = userResult.ok && userResult.value
+      ? userResult.value.displayName
+      : actingUserId;
+
+    return Ok({ ...comment, displayName });
+
   }
 
   async deleteComment(
