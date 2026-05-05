@@ -18,6 +18,7 @@ export interface ICommentController {
     res: Response,
     commentId: string,
     eventId: string,
+    eventOrganizerId: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -85,6 +86,7 @@ class CommentController implements ICommentController {
     res: Response,
     commentId: string,
     eventId: string,
+    eventOrganizerId: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -102,6 +104,7 @@ class CommentController implements ICommentController {
       commentId,
       currentUser.userId,
       currentUser.role,
+      eventOrganizerId,
     );
 
     if (result.ok === false) {

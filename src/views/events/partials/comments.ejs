@@ -21,6 +21,7 @@
                   hx-swap="outerHTML"
                   hx-vals='{"eventId": "<%= eventId %>"}'
                 >
+                  <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
                   <button
                     type="submit"
                     class="px-3 py-1 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-xs font-medium hover:bg-red-50"

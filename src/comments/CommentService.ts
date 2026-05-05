@@ -21,6 +21,7 @@ export interface ICommentService {
     commentId: string,
     actingUserId: string,
     actingUserRole: UserRole,
+    eventOrganizerId: string,
   ): Promise<Result<void, CommentError>>;
 
   listCommentsByEventId(
@@ -62,6 +63,7 @@ class CommentService implements ICommentService {
     commentId: string,
     actingUserId: string,
     actingUserRole: UserRole,
+    eventOrganizerId: string,
   ): Promise<Result<void, CommentError>> {
     const comment = await this.repo.getById(commentId);
 
@@ -71,6 +73,7 @@ class CommentService implements ICommentService {
 
     const isOwner = comment.userId === actingUserId;
     const isAdmin = actingUserRole === "admin";
+    const isOrganizer = actingUserId === eventOrganizerId;
 
     if (!isOwner && !isAdmin) {
       return Err({ name: "UnauthorizedError" as const, message: "Not allowed to delete this comment." });

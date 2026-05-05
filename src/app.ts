@@ -406,6 +406,7 @@ class ExpressApp implements IApp {
           res,
           typeof req.params.id === "string" ? req.params.id : "",
           typeof req.body.eventId === "string" ? req.body.eventId : "",
+          typeof req.body.eventOrganizerId === "string" ? req.body.eventOrganizerId : "",
           sessionStore(req),
           browserSession,
           { isHtmx: this.isHtmxRequest(req) },
