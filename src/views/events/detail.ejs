@@ -92,12 +92,15 @@
     Schedule
   </h2>
 
-  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 md:gap-5">
     <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
       <p class="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
         Starts
       </p>
       <p class="font-medium text-slate-800 sm:text-base"><%= event.startDatetime %></p>
+      <p class="mt-2 text-sm font-medium text-blue-700">
+        <span x-text='relativeTime(<%- JSON.stringify(event.startDatetime) %>)'></span>
+      </p>
     </div>
 
     <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3 sm:p-4 md:p-5">
@@ -105,6 +108,9 @@
         Ends
       </p>
       <p class="font-medium text-slate-800 sm:text-base"><%= event.endDatetime %></p>
+      <p class="mt-2 text-sm font-medium text-slate-600">
+        <span x-text='relativeTime(<%- JSON.stringify(event.endDatetime) %>)'></span>
+      </p>
     </div>
   </div>
 </section>
