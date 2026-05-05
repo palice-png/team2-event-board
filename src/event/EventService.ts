@@ -392,7 +392,7 @@ class EventService implements IEventService {
       return Err(UnauthorizedError("You are not authorized to edit this event."));
     }
 
-    if (event.status === "cancelled") {
+    if (event.status === "cancelled" || event.status == "past") {
       return Err(InvalidEventStateError("Cannot edit a cancelled event."));
     }
 
