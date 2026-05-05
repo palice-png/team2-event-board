@@ -105,7 +105,7 @@ class CommentService implements ICommentService {
     const isAdmin = actingUserRole === "admin";
     const isOrganizer = actingUserId === eventOrganizerId;
 
-    if (!isOwner && !isAdmin) {
+    if (!isOwner && !isAdmin && !isOrganizer) {
       return Err({ name: "UnauthorizedError" as const, message: "Not allowed to delete this comment." });
     }
 

@@ -84,6 +84,14 @@ describe("CommentService — Feature 13", () => {
       const result = await service.deleteComment(created.value.id, "user-1", "user", "");
       expect(result.ok).toBe(true);
     });
+    it("organizer can delete any comment on their event", async () => {
+      const { service } = makeService();
+      const created = await service.createComment("event-1", "Some comment", "user-1", "user");
+      expect(created.ok).toBe(true);
+      if (!created.ok) return;
+      const result = await service.deleteComment(created.value.id, "organizer-1", "staff", "organizer-1");
+      expect(result.ok).toBe(true);
+    });
 
     it("admin can delete any comment", async () => {
       const { service } = makeService();
@@ -145,7 +153,7 @@ describe("CommentService — Feature 13", () => {
       const created = await service.createComment(uniqueEventId, "To be deleted", "user-1", "user");
       expect(created.ok).toBe(true);
       if (!created.ok) return;
-      await service.deleteComment(created.value.id, "user-1", "user");
+      await service.deleteComment(created.value.id, "user-1", "user", "");
       const result = await service.listCommentsByEventId(uniqueEventId);
       expect(result.ok).toBe(true);
       if (result.ok) {
