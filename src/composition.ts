@@ -48,7 +48,7 @@ export function createComposedApp(logger?: ILoggingService): IApp {
 
   //Comment wiring
   const commentRepo = CreatePrismaCommentRepository(prisma);
-  const commentService = CreateCommentService(commentRepo);
+  const commentService = CreateCommentService(commentRepo, authUsers);
   const commentController = CreateCommentController(commentService, resolvedLogger);
   
   // Event wiring

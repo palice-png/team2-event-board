@@ -1,6 +1,7 @@
 import { Ok, Err, type Result } from "../lib/result";
 import type { UserRole } from "../auth/User";
 import type { ICommentRecord, ICommentRepository } from "./CommentRepository";
+import type { IUserRepository } from "../auth/UserRepository";
 
 export type CommentSummary = ICommentRecord;
 
@@ -30,7 +31,11 @@ export interface ICommentService {
 }
 
 class CommentService implements ICommentService {
-  constructor(private readonly repo: ICommentRepository) {}
+  constructor(
+    private readonly repo: ICommentRepository,
+    private readonly users: IUserRepository,
+  ) {}
+  
 
   async createComment(
     eventId: string,
@@ -88,10 +93,25 @@ class CommentService implements ICommentService {
     eventId: string,
   ): Promise<Result<CommentSummary[], CommentError>> {
     const comments = await this.repo.listByEventId(eventId);
-    return Ok(comments);
+    
+    const enriched = await Promise.all(
+      comments.map(async (comment) => {
+        const userResult = await this.users.findById(comment.userId);
+        const displayName = userResult.ok && userResult.value
+          ? userResult.value.displayName
+          : comment.userId;
+        return { ...comment, displayName };
+      }),
+    );
+
+    return Ok(enriched);
+  
   }
 }
 
-export function CreateCommentService(repo: ICommentRepository): ICommentService {
-  return new CommentService(repo);
+export function CreateCommentService(
+  repo: ICommentRepository,
+  users: IUserRepository,
+): ICommentService {
+  return new CommentService(repo, users);
 }
