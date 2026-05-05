@@ -7,8 +7,8 @@
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
             <div class="flex items-start justify-between gap-4">
               <div>
-                <p class="text-sm font-medium text-slate-700 mb-1"><%= comment.userId %></p>
-                <p class="text-slate-800"><%= comment.content %></p>
+                <p class="text-sm font-medium text-slate-700 mb-1"><%= comment.displayName %></p>
+                <p class="text-slate-800"><%= comment.body %></p>
                 <p class="text-xs text-slate-400 mt-2"><%= comment.createdAt %></p>
               </div>
               <% if (session.authenticatedUser?.userId === comment.userId || session.authenticatedUser?.role === "admin") { %>
@@ -21,6 +21,7 @@
                   hx-swap="outerHTML"
                   hx-vals='{"eventId": "<%= eventId %>"}'
                 >
+                  <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
                   <button
                     type="submit"
                     class="px-3 py-1 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-xs font-medium hover:bg-red-50"

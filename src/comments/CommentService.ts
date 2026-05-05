@@ -1,13 +1,33 @@
 import { Ok, Err, type Result } from "../lib/result";
 import type { UserRole } from "../auth/User";
 import type { ICommentRecord, ICommentRepository } from "./CommentRepository";
+import type { IUserRepository } from "../auth/UserRepository";
 
-export type CommentSummary = ICommentRecord;
+export type CommentSummary = ICommentRecord & {displayName: string };
+
+export type ValidationError = { name: "ValidationError"; message: string };
+export type UnauthorizedError = { name: "UnauthorizedError"; message: string };
+export type CommentNotFoundError = { name: "CommentNotFoundError"; message: string };
 
 export type CommentError =
   | { name: "ValidationError"; message: string }
   | { name: "UnauthorizedError"; message: string }
   | { name: "CommentNotFoundError"; message: string };
+
+export const ValidationError = (message: string): ValidationError => ({
+  name: "ValidationError",
+  message,
+});
+  
+export const UnauthorizedError = (message: string): UnauthorizedError => ({
+  name: "UnauthorizedError",
+  message,
+});
+  
+export const CommentNotFoundError = (message: string): CommentNotFoundError => ({
+  name: "CommentNotFoundError",
+  message,
+});
 
 export interface ICommentService {
   createComment(
@@ -21,6 +41,7 @@ export interface ICommentService {
     commentId: string,
     actingUserId: string,
     actingUserRole: UserRole,
+    eventOrganizerId: string,
   ): Promise<Result<void, CommentError>>;
 
   listCommentsByEventId(
@@ -29,7 +50,11 @@ export interface ICommentService {
 }
 
 class CommentService implements ICommentService {
-  constructor(private readonly repo: ICommentRepository) {}
+  constructor(
+    private readonly repo: ICommentRepository,
+    private readonly users: IUserRepository,
+  ) {}
+  
 
   async createComment(
     eventId: string,
@@ -55,13 +80,20 @@ class CommentService implements ICommentService {
 
     await this.repo.create(comment);
 
-    return Ok(comment);
+    const userResult = await this.users.findById(actingUserId);
+    const displayName = userResult.ok && userResult.value
+      ? userResult.value.displayName
+      : actingUserId;
+
+    return Ok({ ...comment, displayName });
+
   }
 
   async deleteComment(
     commentId: string,
     actingUserId: string,
     actingUserRole: UserRole,
+    eventOrganizerId: string,
   ): Promise<Result<void, CommentError>> {
     const comment = await this.repo.getById(commentId);
 
@@ -71,8 +103,9 @@ class CommentService implements ICommentService {
 
     const isOwner = comment.userId === actingUserId;
     const isAdmin = actingUserRole === "admin";
+    const isOrganizer = actingUserId === eventOrganizerId;
 
-    if (!isOwner && !isAdmin) {
+    if (!isOwner && !isAdmin && !isOrganizer) {
       return Err({ name: "UnauthorizedError" as const, message: "Not allowed to delete this comment." });
     }
 
@@ -85,10 +118,25 @@ class CommentService implements ICommentService {
     eventId: string,
   ): Promise<Result<CommentSummary[], CommentError>> {
     const comments = await this.repo.listByEventId(eventId);
-    return Ok(comments);
+    
+    const enriched = await Promise.all(
+      comments.map(async (comment) => {
+        const userResult = await this.users.findById(comment.userId);
+        const displayName = userResult.ok && userResult.value
+          ? userResult.value.displayName
+          : comment.userId;
+        return { ...comment, displayName };
+      }),
+    );
+
+    return Ok(enriched);
+  
   }
 }
 
-export function CreateCommentService(repo: ICommentRepository): ICommentService {
-  return new CommentService(repo);
+export function CreateCommentService(
+  repo: ICommentRepository,
+  users: IUserRepository,
+): ICommentService {
+  return new CommentService(repo, users);
 }

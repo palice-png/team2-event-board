@@ -126,4 +126,4 @@
 </section>
 
 <%- include("partials/detail-status-actions", { event, actingUser: session.authenticatedUser }) %>
-<%- include("partials/comments", { comments, eventId: event.id, session }) %>
+<%- include("partials/comments", { comments, eventId: event.id, session, eventOrganizerId: event.organizerId  }) %>
