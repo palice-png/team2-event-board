@@ -7,15 +7,22 @@
   </p>
 </section>
 
-<% if (errorMessage) { %>
-  <%- include("../partials/error", { message: errorMessage }) %>
-<% } %>
+<div id="edit-event-result">
+  <%- include("partials/editEventResult", {
+    errorMessage,
+    successMessage: null,
+  }) %>
+</div>
+
 
 <section id="edit-form-section" class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
     <form
     action="/events/<%= values.id %>/edit"
     method="post"
     class="space-y-6"
+    hx-post="/events/<%= values.id %>/edit"
+    hx-target="#edit-event-result"
+    hx-swap="innerHTML"
   >
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="md:col-span-2">

@@ -556,6 +556,14 @@ class EventController implements IEventController {
       const log = status >= 500 ? this.logger.error : this.logger.warn;
       log.call(this.logger, `Update event failed: ${result.value.message}`);
 
+      if (res.req?.get("HX-Request") === "true") {
+        res.status(status).render("events/partials/editEventResult", {
+          errorMessage: result.value.message,
+          successMessage: null,
+          layout: false,
+        });
+        return;
+      }
       res.status(status).render("events/edit", {
         session,
         errorMessage: result.value.message,
@@ -565,6 +573,16 @@ class EventController implements IEventController {
     }
 
     this.logger.info(`Updated event ${result.value.id}`);
+
+    if (res.req?.get("HX-Request") === "true") {
+      res.render("events/partials/editEventResult", {
+        errorMessage: null,
+        successMessage: "Event updated successfully.",
+        layout: false,
+      });
+      return;
+    }
+    
     res.redirect(`/events/${result.value.id}`);
   }
 
