@@ -38,14 +38,33 @@ export interface IUpdateEventInput {
 }
 
 export interface OrganizerDashboardEventItem {
-  event: IEventRecord;
+  event: IEventRecord & { insightLabel: OrganizerInsightLabel };
   attendeeCount: number;
+}
+
+export type OrganizerInsightLabel =
+  | "Cancelled"
+  | "Past"
+  | "Ready to Review"
+  | "Needs Attention"
+  | "Almost Full"
+  | "On Track";
+
+export interface OrganizerDashboardInsights {
+  totalEvents: number;
+  published: number;
+  drafts: number;
+  cancelledOrPast: number;
+  totalAttendees: number;
+  needsAttention: number;
+  almostFull: number;
 }
 
 export interface OrganizerDashboardView {
   published: OrganizerDashboardEventItem[];
   draft: OrganizerDashboardEventItem[];
   cancelledOrPast: OrganizerDashboardEventItem[];
+  insights: OrganizerDashboardInsights;
 }
 
 export interface EventDetailView {
@@ -243,6 +262,15 @@ class EventService implements IEventService {
     const published: OrganizerDashboardEventItem[] = [];
     const draft: OrganizerDashboardEventItem[] = [];
     const cancelledOrPast: OrganizerDashboardEventItem[] = [];
+    const insights: OrganizerDashboardInsights = {
+      totalEvents: 0,
+      published: 0,
+      drafts: 0,
+      cancelledOrPast: 0,
+      totalAttendees: 0,
+      needsAttention: 0,
+      almostFull: 0,
+    };
 
     for (const event of eventsResult.value) {
       const attendeeCountResult = await this.events.countGoingByEventId(
@@ -254,17 +282,38 @@ class EventService implements IEventService {
         );
       }
 
+      const insightLabel = this.getDashboardInsightLabel(
+        event.status,
+        event.capacity,
+        attendeeCountResult.value,
+      );
+
       const item: OrganizerDashboardEventItem = {
-        event,
+        event: {
+          ...event,
+          insightLabel,
+        },
         attendeeCount: attendeeCountResult.value,
       };
 
+      insights.totalEvents += 1;
+      insights.totalAttendees += attendeeCountResult.value;
+      if (insightLabel === "Needs Attention") {
+        insights.needsAttention += 1;
+      }
+      if (insightLabel === "Almost Full") {
+        insights.almostFull += 1;
+      }
+
       if (event.status === "published") {
         published.push(item);
+        insights.published += 1;
       } else if (event.status === "draft") {
         draft.push(item);
+        insights.drafts += 1;
       } else {
         cancelledOrPast.push(item);
+        insights.cancelledOrPast += 1;
       }
     }
 
@@ -272,7 +321,40 @@ class EventService implements IEventService {
       published,
       draft,
       cancelledOrPast,
+      insights,
     });
+  }
+
+  private getDashboardInsightLabel(
+    status: IEventRecord["status"],
+    capacity: number | null,
+    attendeeCount: number,
+  ): OrganizerInsightLabel {
+    if (status === "cancelled") {
+      return "Cancelled";
+    }
+
+    if (status === "past") {
+      return "Past";
+    }
+
+    if (status === "draft") {
+      return "Ready to Review";
+    }
+
+    if (status === "published" && attendeeCount === 0) {
+      return "Needs Attention";
+    }
+
+    if (
+      typeof capacity === "number" &&
+      capacity > 0 &&
+      attendeeCount / capacity >= 0.8
+    ) {
+      return "Almost Full";
+    }
+
+    return "On Track";
   }
 
   async publishEvent(
