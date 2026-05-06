@@ -20,6 +20,15 @@
   },
 }; %>
 <% const badge = statusMeta[ev.status] || { label: ev.status, badge: "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200" }; %>
+<% const insightMeta = {
+  "Cancelled": "bg-rose-50 text-rose-900 ring-1 ring-inset ring-rose-200/80",
+  "Past": "bg-slate-100 text-slate-800 ring-1 ring-inset ring-slate-200/80",
+  "Ready to Review": "bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-200/80",
+  "Needs Attention": "bg-orange-50 text-orange-900 ring-1 ring-inset ring-orange-200/80",
+  "Almost Full": "bg-blue-50 text-blue-900 ring-1 ring-inset ring-blue-200/80",
+  "On Track": "bg-emerald-50 text-emerald-900 ring-1 ring-inset ring-emerald-200/80",
+}; %>
+<% const insightBadgeClass = insightMeta[ev.insightLabel] || "bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-200"; %>
 <li
   id="dashboard-row-<%= ev.id %>"
   class="group rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/90 p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 md:p-6"
@@ -42,12 +51,20 @@
             Open the full event detail page
           </p>
         </div>
-        <span
-          class="inline-flex w-fit shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide sm:px-3 sm:text-xs <%= badge.badge %>"
-          aria-label="Event status: <%= badge.label %>"
-        >
-          <%= badge.label %>
-        </span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span
+            class="inline-flex w-fit shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide sm:px-3 sm:text-xs <%= badge.badge %>"
+            aria-label="Event status: <%= badge.label %>"
+          >
+            <%= badge.label %>
+          </span>
+          <span
+            class="inline-flex w-fit shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide sm:px-3 sm:text-xs <%= insightBadgeClass %>"
+            aria-label="Event insight: <%= ev.insightLabel %>"
+          >
+            <%= ev.insightLabel %>
+          </span>
+        </div>
       </div>
 
       <dl
