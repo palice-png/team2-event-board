@@ -15,14 +15,20 @@
 </div>
 
 
-<section id="edit-form-section" class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
-    <form
-    action="/events/<%= values.id %>/edit"
-    method="post"
-    class="space-y-6"
-    hx-post="/events/<%= values.id %>/edit"
-    hx-target="#edit-event-result"
-    hx-swap="innerHTML"
+<section id="edit-form-section" class="max-w-4xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg"
+  x-data="{ isDirty: false, showWarning: false }"
+  x-on:beforeunload.window="if (isDirty) $event.preventDefault()"
+>
+  <form
+  action="/events/<%= values.id %>/edit"
+  method="post"
+  class="space-y-6"
+  hx-post="/events/<%= values.id %>/edit"
+  hx-target="#edit-event-result"
+  hx-swap="innerHTML"
+  x-on:input="isDirty = true"
+  x-on:change="isDirty = true"
+  x-on:htmx:after-request="isDirty = false"
   >
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div class="md:col-span-2">
@@ -142,11 +148,36 @@
         Save Changes
       </button>
       <a
-        href="/events/<%= values.id %>"
-        class="px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200"
-      >
-        Cancel
-      </a>
+      href="/events/<%= values.id %>"
+      class="px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200"
+      x-on:click="if (isDirty) { showWarning = true; $event.preventDefault(); }"
+    >
+      Cancel
+    </a>
+    
+    <div
+      x-show="showWarning"
+      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      x-cloak
+    >
+      <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-200">
+        <h3 class="text-base font-semibold text-slate-900 mb-2">Unsaved changes</h3>
+        <p class="text-sm text-slate-500 mb-4">You have unsaved changes. Are you sure you want to leave?</p>
+        <div class="flex gap-3 justify-end">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200"
+            x-on:click="showWarning = false"
+          >
+            Stay
+          </button>
+          <a
+            href="/events/<%= values.id %>"
+            class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-700"
+            x-on:click="isDirty = false"
+          >
+            Leave anyway
+          </a>
+        </div>
+      </div>
     </div>
-  </form>
-</section>
