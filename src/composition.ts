@@ -13,7 +13,7 @@ import { CreatePrismaEventRepository } from "./event/PrismaEventRepository";
 import { CreateEventService } from "./event/EventService";
 import { CreateLoggingService } from "./service/LoggingService";
 import type { ILoggingService } from "./service/LoggingService";
-import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
+import { CreatePrismaRsvpRepository } from "./rsvp/PrismaRsvpRepository";
 import { CreateRsvpService } from "./rsvp/RsvpService";
 import { CreateRsvpController } from "./rsvp/RsvpController";
 import { CreatePrismaRsvpToggleRepository } from "./rsvp/PrismaRsvpToggleRepository";
@@ -49,7 +49,7 @@ export function createComposedApp(logger?: ILoggingService): IApp {
   const eventService = CreateEventService(eventRepository);
 
   // RSVP wiring
-  const rsvpRepo = CreateInMemoryRsvpRepository();
+  const rsvpRepo = CreatePrismaRsvpRepository(prisma);
   const rsvpService = CreateRsvpService(rsvpRepo);
   const rsvpToggleRepo = CreatePrismaRsvpToggleRepository(prisma);
   const rsvpToggleService = CreateRsvpToggleService(rsvpToggleRepo, eventRepository);
