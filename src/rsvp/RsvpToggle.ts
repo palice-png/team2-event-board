@@ -75,4 +75,8 @@ export interface IRsvpToggleRepository {
   findWaitlistedForEvent(
     eventId: string,
   ): Promise<Result<IRsvpToggleRecord[], RsvpError>>;
+  getWaitlistPosition(
+    userId: string,
+    eventId: string,
+  ): Promise<Result<number | null, RsvpError>>;
 }

@@ -1,0 +1,35 @@
+<div
+  id="rsvp-section"
+  x-data="{ status: '<%= rsvpStatus %>' }"
+>
+  <form
+    hx-post="/events/<%= eventId %>/rsvp"
+    hx-target="#rsvp-section"
+    hx-swap="outerHTML"
+  >
+    <button
+      type="submit"
+      class="mt-2 w-full rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+      :class="{
+        'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500': status === 'confirmed',
+        'bg-yellow-400 text-yellow-900 hover:bg-yellow-500 focus:ring-yellow-400': status === 'waitlisted',
+        'bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-300': status === 'none'
+      }"
+      x-text="status === 'confirmed' ? 'Cancel RSVP' : status === 'waitlisted' ? 'Leave Waitlist' : 'RSVP to this Event'"
+    ></button>
+  </form>
+
+  <% if (rsvpStatus === 'confirmed') { %>
+    <p class="mt-2 text-center text-xs font-medium text-green-600">
+      ✓ You are attending this event
+    </p>
+  <% } else if (rsvpStatus === 'waitlisted') { %>
+    <p class="mt-2 text-center text-xs font-medium text-yellow-600">
+      ⏳ You are on the waitlist
+    </p>
+  <% } else { %>
+    <p class="mt-2 text-center text-xs font-medium text-slate-500">
+      You have not RSVPed yet
+    </p>
+  <% } %>
+</div>

@@ -20,9 +20,6 @@ import {
   touchAppSession,
 } from "./session/AppSession";
 import { ILoggingService } from "./service/LoggingService";
-import { CreateInMemoryEventRepository } from "./event/InMemoryEventRepository";
-import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
-import { CreateRsvpService } from "./rsvp/RsvpService";
 
 type AsyncRequestHandler = RequestHandler;
 
@@ -45,7 +42,6 @@ class ExpressApp implements IApp {
 
   constructor(
     private readonly authController: IAuthController,
-
     private readonly rsvpController: IRsvpController,
     private readonly eventController: IEventController,
     private readonly commentController: ICommentController,
@@ -217,6 +213,7 @@ class ExpressApp implements IApp {
         );
       }),
     );
+
     this.app.get(
       "/events/:id/edit",
       asyncHandler(async (req, res) => {
@@ -301,7 +298,6 @@ class ExpressApp implements IApp {
         }
 
         const browserSession = touchAppSession(sessionStore(req));
-
         await this.eventController.createFromForm(
           req,
           res,
@@ -372,6 +368,23 @@ class ExpressApp implements IApp {
                 ? req.body.viewSource
                 : "",
           },
+        );
+      }),
+    );
+
+    this.app.post(
+      "/events/:id/rsvp",
+      asyncHandler(async (req, res) => {
+        if (!this.requireRole(req, res, ["user"], "Only members can RSVP to events.")) {
+          return;
+        }
+
+        const browserSession = touchAppSession(sessionStore(req));
+        await this.rsvpController.toggleRsvp(
+          res,
+          typeof req.params.id === "string" ? req.params.id : "",
+          browserSession,
+          { isHtmx: this.isHtmxRequest(req) },
         );
       }),
     );
@@ -519,7 +532,6 @@ class ExpressApp implements IApp {
     );
 
     // ── Authenticated home page ──────────────────────────────────────
-    // TODO: Replace this placeholder with your project's main page.
 
     this.app.get(
       "/home",

@@ -21,6 +21,7 @@ import type {
   UpdateEventError,
 } from "./errors";
 import type { ICommentService } from "../comments/CommentService";
+import type { IRsvpToggleService } from "../rsvp/RsvpToggleService";
 
 export interface IEventController {
   showCreateForm(
@@ -92,6 +93,7 @@ class EventController implements IEventController {
     private readonly service: IEventService,
     private readonly logger: ILoggingService,
     private readonly commentService: ICommentService,
+    private readonly rsvpToggleService: IRsvpToggleService,
   ) {}
 
   private isHtmxRequest(req: Request): boolean {
@@ -301,12 +303,29 @@ class EventController implements IEventController {
     );
     const comments = commentsResult.ok ? commentsResult.value : [];
 
+    // Look up the user's RSVP status if they are a member
+    let rsvpStatus: string = "none";
+    let waitlistPosition: number | null = null;
+
+    if (currentUser.role === "user") {
+      const rsvpResult = await this.rsvpToggleService.getRsvpStatus(
+        eventId,
+        currentUser.userId,
+      );
+      if (rsvpResult.ok) {
+        rsvpStatus = rsvpResult.value.status;
+        waitlistPosition = rsvpResult.value.waitlistPosition;
+      }
+    }
+
     res.render("events/detail", {
       pageError: null,
       session,
       event: result.value.event,
       attendeeCount: result.value.attendeeCount,
       comments,
+      rsvpStatus,
+      waitlistPosition,
     });
   }
 
@@ -582,7 +601,7 @@ class EventController implements IEventController {
       });
       return;
     }
-    
+
     res.redirect(`/events/${result.value.id}`);
   }
 
@@ -638,6 +657,7 @@ export function CreateEventController(
   service: IEventService,
   logger: ILoggingService,
   commentService: ICommentService,
+  rsvpToggleService: IRsvpToggleService,
 ): IEventController {
-  return new EventController(service, logger, commentService);
+  return new EventController(service, logger, commentService, rsvpToggleService);
 }
