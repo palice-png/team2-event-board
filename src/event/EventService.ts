@@ -113,6 +113,8 @@ export interface IEventService {
     actingUserRole: UserRole,
   ): Promise<Result<IEventRecord, UpdateEventError>>;
 
+  getPublishedEvents(): Promise<Result<IEventSummary[], ArchiveError>>;
+
   transitionExpiredEvents(
     now: Date
   ): Promise<Result<number, ArchiveError>>;
@@ -607,6 +609,21 @@ class EventService implements IEventService {
     }
 
     return Ok(parsedCapacity);
+  }
+
+  async getPublishedEvents(): Promise<Result<IEventSummary[], ArchiveError>> {
+    const result = await this.events.listByStatus("published");
+    if (result.ok === false) {
+      return Err(UnexpectedDependencyError(result.value.message));
+    }
+    const sorted = result.value
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(a.startDatetime).getTime() -
+          new Date(b.startDatetime).getTime(),
+      );
+    return Ok(sorted.map(toEventSummary));
   }
 
   async transitionExpiredEvents(
