@@ -46,7 +46,7 @@ export type OrganizerInsightLabel =
   | "Cancelled"
   | "Past"
   | "Ready to Review"
-  | "Needs Attention"
+  | "Low Engagement"
   | "Almost Full"
   | "On Track";
 
@@ -56,7 +56,7 @@ export interface OrganizerDashboardInsights {
   drafts: number;
   cancelledOrPast: number;
   totalAttendees: number;
-  needsAttention: number;
+  lowEngagement: number;
   almostFull: number;
 }
 
@@ -268,7 +268,7 @@ class EventService implements IEventService {
       drafts: 0,
       cancelledOrPast: 0,
       totalAttendees: 0,
-      needsAttention: 0,
+      lowEngagement: 0,
       almostFull: 0,
     };
 
@@ -298,8 +298,8 @@ class EventService implements IEventService {
 
       insights.totalEvents += 1;
       insights.totalAttendees += attendeeCountResult.value;
-      if (insightLabel === "Needs Attention") {
-        insights.needsAttention += 1;
+      if (insightLabel === "Low Engagement") {
+        insights.lowEngagement += 1;
       }
       if (insightLabel === "Almost Full") {
         insights.almostFull += 1;
@@ -343,7 +343,7 @@ class EventService implements IEventService {
     }
 
     if (status === "published" && attendeeCount === 0) {
-      return "Needs Attention";
+      return "Low Engagement";
     }
 
     if (
