@@ -675,14 +675,14 @@ class EventController implements IEventController {
     session: IAppBrowserSession,
   ): Promise<void> {
     const result = await this.service.getPublishedEvents();
-    const events = result.ok ? result.value : [];
-    const pageError = result.ok ? null : result.value.message;
 
-    res.render("home", {
-      session,
-      events,
-      pageError,
-    });
+    if (result.ok === false) {
+      this.logger.error(`Failed to load published events: ${result.value.message}`);
+      res.render("home", { session, events: [], pageError: result.value.message });
+      return;
+    }
+
+    res.render("home", { session, events: result.value, pageError: null });
   }
 }
 
