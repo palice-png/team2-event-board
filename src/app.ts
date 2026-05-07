@@ -202,6 +202,18 @@ class ExpressApp implements IApp {
     );
 
     this.app.get(
+      "/events/archive",
+      asyncHandler(async (req, res) => {
+        if (!this.requireAuthenticated(req, res)) return;
+        const browserSession = recordPageView(sessionStore(req));
+        const category = typeof req.query.category === "string" && req.query.category !== ""
+          ? req.query.category
+          : null;
+        await this.eventController.showArchivePage(res, category, sessionStore(req), browserSession);
+      }),
+    );
+
+    this.app.get(
       "/events/:id",
       asyncHandler(async (req, res) => {
         if (!this.requireAuthenticated(req, res)) {
@@ -271,18 +283,6 @@ class ExpressApp implements IApp {
           sessionStore(req),
           browserSession,
         );
-      }),
-    );
-
-    this.app.get(
-      "/events/archive",
-      asyncHandler(async (req, res) => {
-        if (!this.requireAuthenticated(req, res)) return;
-        const browserSession = recordPageView(sessionStore(req));
-        const category = typeof req.query.category === "string" && req.query.category !== ""
-          ? req.query.category
-          : null;
-        await this.eventController.showArchivePage(res, category, sessionStore(req), browserSession);
       }),
     );
 
