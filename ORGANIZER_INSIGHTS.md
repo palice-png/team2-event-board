@@ -16,12 +16,12 @@ The summary panel shows:
 - Draft Events
 - Cancelled/Past Events
 - Total Attendees
-- Needs Attention
+- Low Engagement
 - Almost Full
 
 Each event row also displays an insight label such as:
 
-- Needs Attention
+- Low Engagement
 - Almost Full
 - Ready to Review
 - Past
@@ -36,7 +36,7 @@ Organizer Insights helps organizers quickly understand the condition of their ev
 
 For example:
 
-- A published event with 0 attendees is marked as **Needs Attention**
+- A published event with 0 attendees is marked as **Low Engagement**
 - An event close to capacity is marked as **Almost Full**
 - A draft event is marked as **Ready to Review**
 - A normal published event is marked as **On Track**
@@ -67,7 +67,7 @@ The EJS views then render the prepared data.
 1. **Cancelled** if the event status is cancelled
 2. **Past** if the event status is past
 3. **Ready to Review** if the event is a draft
-4. **Needs Attention** if the event is published and has 0 attendees
+4. **Low Engagement** if the event is published and has 0 attendees
 5. **Almost Full** if the event has capacity and attendance is at least 80%
 6. **On Track** otherwise
 
@@ -86,4 +86,3 @@ This feature does not change:
 ## Challenges
 
 The main challenge was adding useful organizer-facing insight without changing the existing architecture or breaking the dashboard's HTMX publish/cancel updates.
-
