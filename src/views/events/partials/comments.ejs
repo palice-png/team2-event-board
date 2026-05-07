@@ -53,19 +53,20 @@
       hx-target="#comments-section"
       hx-swap="outerHTML"
     >
-      <div x-data="{ count: 0, max: 300 }">
-        <div class="mb-2 flex items-center justify-between gap-3">
-          <label for="content" class="block text-sm font-medium text-slate-700">
-            Add a comment
-          </label>
-          <p
-            class="text-xs font-medium"
-            x-bind:class="count >= max ? 'text-red-600' : count > max * 0.9 ? 'text-amber-600' : 'text-slate-500'"
-            aria-live="polite"
-          >
-            <span x-text="count"></span> / <span x-text="max"></span>
-          </p>
-        </div>
+    <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
+    <div x-data="{ count: 0, max: 300 }">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <label for="content" class="block text-sm font-medium text-slate-700">
+          Add a comment
+        </label>
+        <p
+          class="text-xs font-medium"
+          x-bind:class="count >= max ? 'text-red-600' : count > max * 0.9 ? 'text-amber-600' : 'text-slate-500'"
+          aria-live="polite"
+        >
+          <span x-text="count"></span> / <span x-text="max"></span>
+        </p>
+      </div>
         <textarea
           id="content"
           name="content"
