@@ -643,12 +643,19 @@ class EventService implements IEventService {
       return Err(InvalidFilterError('Category filter cannot be empty.'));
     }
  
-    const result = await this.events.listByStatus('past');
-    if (result.ok === false) {
-      return Err(UnexpectedDependencyError(result.value.message));
+    const [pastResult, cancelledResult] = await Promise.all([
+      this.events.listByStatus("past"),
+      this.events.listByStatus("cancelled"),
+    ]);
+
+    if (pastResult.ok === false) {
+      return Err(UnexpectedDependencyError(pastResult.value.message));
     }
- 
-    let events = result.value;
+    if (cancelledResult.ok === false) {
+      return Err(UnexpectedDependencyError(cancelledResult.value.message));
+    }
+
+    let events = [...pastResult.value, ...cancelledResult.value];
  
     if (category !== null) {
       events = events.filter(
