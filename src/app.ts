@@ -531,6 +531,18 @@ class ExpressApp implements IApp {
       }),
     );
 
+    this.app.post(
+      "/my-rsvps/:eventId/cancel",
+      asyncHandler(async (req, res) => {
+        if (!this.requireRole(req, res, ["user"], "Only members can cancel RSVPs.")) {
+          return;
+        }
+        const browserSession = touchAppSession(sessionStore(req));
+        const eventId = typeof req.params.eventId === "string" ? req.params.eventId : "";
+        await this.rsvpController.cancelRsvpFromDashboard(res, eventId, browserSession);
+      }),
+    );
+
     // ── Authenticated home page ──────────────────────────────────────
 
     this.app.get(

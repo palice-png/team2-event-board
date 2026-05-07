@@ -46,14 +46,42 @@
               <% } else { %>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Waitlisted</span>
               <% } %>
-              <button
-                type="button"
-                disabled
-                title="Cancel RSVP — coming soon"
-                class="px-3.5 py-2 rounded-lg bg-slate-100 text-slate-400 border border-slate-200 text-sm font-medium cursor-not-allowed"
-              >
-                Cancel
-              </button>
+              <form method="post" action="/my-rsvps/<%= entry.event.id %>/cancel" class="m-0" x-data="{ confirm: false }">
+                <div x-show="!confirm" x-transition.opacity.duration.150ms>
+                  <button
+                    type="button"
+                    class="px-3.5 py-2 rounded-lg bg-white text-red-600 border border-red-200 text-sm font-medium hover:bg-red-50"
+                    x-on:click="confirm = true"
+                  >
+                    Cancel RSVP
+                  </button>
+                </div>
+                <div
+                  x-show="confirm"
+                  x-transition.opacity.duration.150ms
+                  class="space-y-2 rounded-lg border border-red-200 bg-red-50/90 p-3 shadow-sm"
+                  style="display: none"
+                  role="region"
+                  aria-label="Confirm cancel RSVP"
+                >
+                  <p class="text-xs font-medium text-slate-700">Cancel your RSVP for this event?</p>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      x-on:click="confirm = false"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      class="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50"
+                    >
+                      Yes, cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
           </li>
         <% } %>

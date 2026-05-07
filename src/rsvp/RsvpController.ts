@@ -12,6 +12,11 @@ export interface IRsvpController {
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
   ): Promise<void>;
+  cancelRsvpFromDashboard(
+    res: Response,
+    eventId: string,
+    session: IAppBrowserSession,
+  ): Promise<void>;
 }
 
 class RsvpController implements IRsvpController {
@@ -96,6 +101,28 @@ class RsvpController implements IRsvpController {
     }
 
     res.redirect(`/events/${eventId}`);
+  }
+
+  async cancelRsvpFromDashboard(
+    res: Response,
+    eventId: string,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    if (!session.authenticatedUser) {
+      res.status(401).redirect("/login");
+      return;
+    }
+
+    const { userId, role } = session.authenticatedUser;
+    const result = await this.rsvpToggleService.toggleRsvp(eventId, userId, role);
+
+    if (result.ok === false) {
+      this.logger.warn(`cancelRsvp from dashboard failed: ${result.value.message}`);
+    } else {
+      this.logger.info(`RSVP cancelled for event ${eventId} by user ${userId}`);
+    }
+
+    res.redirect("/my-rsvps");
   }
 }
 
