@@ -19,11 +19,19 @@
 <% if (session.authenticatedUser?.role === "admin" || session.authenticatedUser?.role === "staff") { %>
   <section class="max-w-3xl p-6 border border-slate-200 rounded-2xl bg-white shadow-lg">
     <h2 class="text-xl font-semibold text-slate-800 mb-3">Organizer Actions</h2>
-    <a
-      href="/events/new"
-      class="inline-block px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm shadow-sm hover:bg-blue-700 no-underline"
-    >
-      + Create Event
-    </a>
+    <div class="flex gap-3 flex-wrap">
+      <a
+        href="/events/new"
+        class="inline-block px-5 py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm shadow-sm hover:bg-blue-700 no-underline"
+      >
+        + Create Event
+      </a>
+      <a
+        href="/organizer/dashboard"
+        class="inline-block px-5 py-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-semibold text-sm shadow-sm hover:bg-slate-50 no-underline"
+      >
+        Organizer Dashboard
+      </a>
+    </div>
   </section>
 <% } %>
