@@ -9,6 +9,7 @@ export interface ICommentController {
     res: Response,
     eventId: string,
     body: string,
+    eventOrganizerId: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -35,6 +36,7 @@ class CommentController implements ICommentController {
     res: Response,
     eventId: string,
     body: string,
+    eventOrganizerId: string,
     store: AppSessionStore,
     session: IAppBrowserSession,
     options?: { isHtmx?: boolean },
@@ -74,6 +76,7 @@ class CommentController implements ICommentController {
         layout: false,
         comments,
         eventId,
+        eventOrganizerId,
         session,
       });
       return;
