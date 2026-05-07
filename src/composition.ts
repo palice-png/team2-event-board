@@ -16,6 +16,8 @@ import type { ILoggingService } from "./service/LoggingService";
 import { CreateInMemoryRsvpRepository } from "./rsvp/InMemoryRsvpRepository";
 import { CreateRsvpService } from "./rsvp/RsvpService";
 import { CreateRsvpController } from "./rsvp/RsvpController";
+import { CreatePrismaRsvpToggleRepository } from "./rsvp/PrismaRsvpToggleRepository";
+import { CreateRsvpToggleService } from "./rsvp/RsvpToggleService";
 import { CreatePrismaCommentRepository } from "./comments/PrismaCommentRepository";
 import { CreateCommentService } from "./comments/CommentService";
 import { CreateCommentController } from "./comments/CommentController";
@@ -30,34 +32,34 @@ export function createComposedApp(logger?: ILoggingService): IApp {
   const authUsers = CreateInMemoryUserRepository();
   const passwordHasher = CreatePasswordHasher();
   const authService = CreateAuthService(authUsers, passwordHasher);
-  const adminUserService = CreateAdminUserService(
-    authUsers,
-    passwordHasher,
-  );
+  const adminUserService = CreateAdminUserService(authUsers, passwordHasher);
   const authController = CreateAuthController(
     authService,
     adminUserService,
     resolvedLogger,
   );
 
+  // Comment wiring
+  const commentRepo = CreatePrismaCommentRepository(prisma);
+  const commentService = CreateCommentService(commentRepo, authUsers);
+  const commentController = CreateCommentController(commentService, resolvedLogger);
+
+  // Event wiring
+  const eventRepository = CreatePrismaEventRepository(prisma);
+  const eventService = CreateEventService(eventRepository);
 
   // RSVP wiring
   const rsvpRepo = CreateInMemoryRsvpRepository();
   const rsvpService = CreateRsvpService(rsvpRepo);
-  const rsvpController = CreateRsvpController(rsvpService, resolvedLogger);
+  const rsvpToggleRepo = CreatePrismaRsvpToggleRepository(prisma);
+  const rsvpToggleService = CreateRsvpToggleService(rsvpToggleRepo, eventRepository);
+  const rsvpController = CreateRsvpController(rsvpService, rsvpToggleService, resolvedLogger);
 
-  //Comment wiring
-  const commentRepo = CreatePrismaCommentRepository(prisma);
-  const commentService = CreateCommentService(commentRepo, authUsers);
-  const commentController = CreateCommentController(commentService, resolvedLogger);
-  
-  // Event wiring
-  const eventRepository = CreatePrismaEventRepository(prisma);
-  const eventService = CreateEventService(eventRepository);
   const eventController = CreateEventController(
     eventService,
     resolvedLogger,
     commentService,
+    rsvpToggleService,
   );
 
   return CreateApp(authController, rsvpController, eventController, commentController, resolvedLogger);
