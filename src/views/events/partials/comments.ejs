@@ -4,35 +4,39 @@
 >
   <h2 class="text-xl font-semibold text-slate-900 mb-4">Comments</h2>
   
-    <div id="comment-list" class="space-y-4 mb-6">
-      <% if (comments && comments.length > 0) { %>
-        <% for (const comment of comments) { %>
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                <p class="text-sm font-medium text-slate-700 mb-1"><%= comment.displayName %></p>
-                <p class="text-slate-800"><%= comment.body %></p>
-                <p class="text-xs text-slate-400 mt-2"><%= comment.createdAt %></p>
-              </div>
-              <% if (session.authenticatedUser?.userId === comment.userId || session.authenticatedUser?.role === "admin") { %>
-                <form
-                  method="post"
-                  action="/comments/<%= comment.id %>/delete"
-                  class="m-0"
-                  hx-post="/comments/<%= comment.id %>/delete"
-                  hx-target="#comments-section"
-                  hx-swap="outerHTML"
-                  hx-vals='{"eventId": "<%= eventId %>"}'
+  <div id="comment-list" class="space-y-4 mb-6">
+    <% if (comments && comments.length > 0) { %>
+      <% for (const comment of comments) { %>
+        <div
+          class="p-4 rounded-xl bg-slate-50 border border-slate-200"
+          x-data
+          x-init="$el.style.opacity = '0'; $el.style.transform = 'translateY(8px)'; requestAnimationFrame(() => { $el.style.transition = 'opacity 0.3s ease, transform 0.3s ease'; $el.style.opacity = '1'; $el.style.transform = 'translateY(0)'; })"
+        > 
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-medium text-slate-700 mb-1"><%= comment.displayName %></p>
+              <p class="text-slate-800"><%= comment.body %></p>
+              <p class="text-xs text-slate-400 mt-2"><%= comment.createdAt %></p>
+            </div>
+            <% if (session.authenticatedUser?.userId === comment.userId || session.authenticatedUser?.role === "admin" || session.authenticatedUser?.userId === eventOrganizerId) { %>
+              <form
+                method="post"
+                action="/comments/<%= comment.id %>/delete"
+                class="m-0"
+                hx-post="/comments/<%= comment.id %>/delete"
+                hx-target="#comments-section"
+                hx-swap="outerHTML"
+                hx-vals='{"eventId": "<%= eventId %>", "eventOrganizerId": "<%= eventOrganizerId %>"}'
+              >
+                <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
+                <button
+                  type="submit"
+                  class="px-3 py-1 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-xs font-medium hover:bg-red-50"
                 >
-                  <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
-                  <button
-                    type="submit"
-                    class="px-3 py-1 rounded-lg bg-white text-red-600 border border-red-200 cursor-pointer text-xs font-medium hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </form>
-              <% } %>
+                  Delete
+                </button>
+              </form>
+            <% } %>
             </div>
           </div>
         <% } %>
@@ -50,15 +54,26 @@
       hx-swap="outerHTML"
     >
     <input type="hidden" name="eventOrganizerId" value="<%= eventOrganizerId %>" />
-      <div>
-        <label for="content" class="block text-sm font-medium text-slate-700 mb-2">
+    <div x-data="{ count: 0, max: 300 }">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <label for="content" class="block text-sm font-medium text-slate-700">
           Add a comment
         </label>
+        <p
+          class="text-xs font-medium"
+          x-bind:class="count >= max ? 'text-red-600' : count > max * 0.9 ? 'text-amber-600' : 'text-slate-500'"
+          aria-live="polite"
+        >
+          <span x-text="count"></span> / <span x-text="max"></span>
+        </p>
+      </div>
         <textarea
           id="content"
           name="content"
           rows="3"
+          maxlength="300"
           placeholder="Write your comment here..."
+          x-on:input="count = $event.target.value.length"
           class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         ></textarea>
       </div>
@@ -69,4 +84,7 @@
         Post Comment
       </button>
     </form>
-  </section>
+</section>
+
+
+    
