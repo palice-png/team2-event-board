@@ -85,6 +85,18 @@ export interface IEventController {
     store: AppSessionStore,
     session: IAppBrowserSession,
   ): Promise<void>;
+
+  showPublishedEvents(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
+
+  showHomePage(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void>;
 }
 
 class EventController implements IEventController {
@@ -630,6 +642,46 @@ class EventController implements IEventController {
       events: result.value,
       category,
       pageError: null,
+    });
+  }
+
+  async showPublishedEvents(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const result = await this.service.getPublishedEvents();
+
+    if (result.ok === false) {
+      this.logger.error(`Failed to load published events: ${result.value.message}`);
+      res.status(500).render("events/list", {
+        session,
+        events: [],
+        pageError: result.value.message,
+      });
+      return;
+    }
+
+    res.render("events/list", {
+      session,
+      events: result.value,
+      pageError: null,
+    });
+  }
+
+  async showHomePage(
+    res: Response,
+    store: AppSessionStore,
+    session: IAppBrowserSession,
+  ): Promise<void> {
+    const result = await this.service.getPublishedEvents();
+    const events = result.ok ? result.value : [];
+    const pageError = result.ok ? null : result.value.message;
+
+    res.render("home", {
+      session,
+      events,
+      pageError,
     });
   }
 }
